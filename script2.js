@@ -1,6 +1,6 @@
 // 3/14/2025
 
-const spectrumcanvas=document.getElementById("visualization");
+var spectrumcanvas=document.getElementById("visualization");
 const spectrumctx=spectrumcanvas.getContext("2d");
 //ctx.fillStyle = 'rgb(255, 0, 0)';
 //ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -50,22 +50,28 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         // Visualization code here
         spectrumctx.fillStyle = 'rgb(0, 0, 0)';
         spectrumctx.fillRect(0,0,spectrumcanvas.width,spectrumcanvas.height);
-        spectrumctx.clearRect(0,0,spectrumcanvas.width,spectrumcanvas.height);
+        //spectrumctx.clearRect(0,0,spectrumcanvas.width,spectrumcanvas.height);
 
-        let barWidth = (spectrumcanvas.height / bufferLength) * 2.5;
-        let barHeight;
-        let x = 0;
+        let barHeight = (spectrumcanvas.width / bufferLength) * 2.5;
+        let barWidth;
+        let y = 0;
         //console.log(bufferLength);
-    
+        var b="";
         for (let i = 0; i < bufferLength; i++) {
-            barHeight = dataArray[i];
-            spectrumctx.fillStyle = 'rgb(' + (barHeight + 100) + ',50,50)';
+            barWidth = dataArray[i];
+            spectrumctx.fillStyle = 'rgb(' + (barWidth + 100) + ',50,50)';
             //if(barHeight!=-Infinity){
             //    console.log(barHeight);
             //}
-            spectrumctx.fillRect(x, spectrumcanvas.height - barHeight / 2, barWidth, barHeight / 2);
-            x += barWidth + 1;
+            spectrumctx.fillRect(spectrumcanvas.width - barWidth / 2, y, barWidth / 2, barHeight);
+            y += barHeight + 1;
+            //b=[spectrumcanvas.width - barWidth / 2, y, barWidth / 2, barHeight];
         }
+        //try{
+        //spectrumcanvas.width-=1;
+        //console.log(b);
+        //console.log(spectrumcanvas.width);
+        //}catch(e){console.log(e);}
     }
       
     draw();
