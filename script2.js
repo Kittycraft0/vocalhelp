@@ -52,21 +52,28 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         spectrumctx.fillRect(0,0,spectrumcanvas.width,spectrumcanvas.height);
         //spectrumctx.clearRect(0,0,spectrumcanvas.width,spectrumcanvas.height);
 
-        let barHeight = (spectrumcanvas.width / bufferLength) * 2.5;
+        let barHeight = (spectrumcanvas.height / bufferLength) * 2.5;
         let barWidth;
-        let y = 0;
+        let y = spectrumcanvas.height;
         //console.log(bufferLength);
-        var b="";
+        //var b="";
+        var min=Infinity;
+        var max=-Infinity;
         for (let i = 0; i < bufferLength; i++) {
-            barWidth = dataArray[i];
-            spectrumctx.fillStyle = 'rgb(' + (barWidth + 100) + ',50,50)';
-            //if(barHeight!=-Infinity){
-            //    console.log(barHeight);
-            //}
-            spectrumctx.fillRect(spectrumcanvas.width - barWidth / 2, y, barWidth / 2, barHeight);
-            y += barHeight + 1;
+            if(y<min){min=y;}
+            if(y>max){max=y;}
+            value = dataArray[i];
+            barWidth = value/255*spectrumcanvas.width;
+            spectrumctx.fillStyle = 'rgb(' + (value + 100) + ',50,50)';
+            // right justified top down
+            //spectrumctx.fillRect(spectrumcanvas.width - barWidth / 2, y, barWidth / 2, barHeight);
+            // left justified top down
+            spectrumctx.fillRect(0, y, barWidth, barHeight);
+            //y -= barHeight + 1;
+            y -= spectrumcanvas.height/bufferLength;
             //b=[spectrumcanvas.width - barWidth / 2, y, barWidth / 2, barHeight];
         }
+        console.log("min: "+min+", max: "+max);
         //try{
         //spectrumcanvas.width-=1;
         //console.log(b);
