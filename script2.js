@@ -272,7 +272,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     }
     
     // Draw red lines on the spectrogram for testing or idk
-    setInterval(()=>{
+    /*setInterval(()=>{
         // Scroll the spectrogram left
         const imageData = spectrogramctx.getImageData(1, 0, spectrogramcanvas.width - 1, spectrogramcanvas.height);
         spectrogramctx.putImageData(imageData, 0, 0);
@@ -280,7 +280,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         // Draw red line on the right edge
         spectrogramctx.fillStyle = `rgb(255,0,0)`;
         spectrogramctx.fillRect(spectrogramcanvas.width - 1, 0, 1, spectrogramcanvas.height);
-    },1000);
+    },1000);*/
     
 
     /*    function h(){
@@ -321,6 +321,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     function drawSpectrum() {
         // Get the frequency data
         analysersmooth.getFloatFrequencyData(dataArraysmooth);
+        //analysersmooth.getFloatTimeDomainData(dataArraysmooth);
         
         // Clear the canvas before drawing
         spectrumctx.fillStyle = 'rgb(0, 0, 0)';
@@ -408,19 +409,28 @@ navigator.mediaDevices.getUserMedia({ audio: true })
 
     // Function to calculate volume (rms)
     function calculateVolume(timeDomainDataArray) {
-        let sum = 0;
+        /*let sum = 0;
         for (let i = 0; i < timeDomainDataArray.length; i++) {
             sum += timeDomainDataArray[i] * timeDomainDataArray[i]; // Square each sample
         }
         //console.log(timeDomainDataArray);
         let rms = Math.sqrt(sum / timeDomainDataArray.length); // Root mean square (RMS)
         let volume = Math.max(0, Math.min(1, rms / 128)); // Normalize RMS to a 0-1 range
-        return volume;
+        return volume;*/
+
+        let sumSquares = 0;
+        for (let i = 0; i < timeDomainDataArray.length; i++) {
+            sumSquares += timeDomainDataArray[i] * timeDomainDataArray[i];
+        }
+        const rms = Math.sqrt(sumSquares / timeDomainDataArray.length);
+        const rmsDb = 20 * Math.log10(rms);
+        return rmsDb
+
     }
 
 
-    // Function to visualize the volume on the canvas
-    function visualizeVolume(volume) {
+    /*// Function to visualize the volume on the canvas
+    function visualizeVolume() {
         // .
         //amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height); // Clear the previous frame
         //const barHeight = volume * amplitudecanvas.height; // Map volume to canvas height
@@ -437,7 +447,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             const barWidth = amplitudecanvas.width / bufferLength;
             amplitudectx.fillStyle = `rgb(${(1 - percent) * 255}, ${percent * 255}, 0)`;
             amplitudectx.fillRect(index * barWidth, offset, barWidth, height);
-        }); //... chatgpt why that's the wrong thing...*/
+        }); //... chatgpt why that's the wrong thing...*
         // .
 
         //analyser.getByteFrequencyData(dataArray);
@@ -447,21 +457,96 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     
         let sum = 0;
         dataArray.forEach(value => {
-            sum += value;
+            sum += value*value;
         });
-        const average = sum / dataArray.length;
-        const dB = -Math.log10(average / 255) * 20;
+        const rms = Math.sqrt(sum / dataArray.length);
+        const dB = Math.log10(rms) * 20;
     
-        amplitudectx.fillStyle = 'green';
+        amplitudectx.fillStyle = 'lime';
         amplitudectx.fillRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
-    
+        //console.log(dB);
         amplitudectx.fillStyle = 'red';
-        amplitudectx.fillRect(0, 0, amplitudecanvas.width, (dB / 100) * amplitudecanvas.height);
-    
+        amplitudectx.fillRect(0, 0, amplitudecanvas.width, dB / 60 * amplitudecanvas.height);
+        amplitudectx;
         //requestAnimationFrame(draw);
 
 
-    }
+    }*/
+        /*function visualizeVolume() {
+            // Retrieve time-domain data
+            analyser.getFloatTimeDomainData(dataArray);
+        
+            // Calculate RMS (Root Mean Square)
+            let sumSquares = 0;
+            for (let i = 0; i < dataArray.length; i++) {
+                sumSquares += dataArray[i] * dataArray[i];
+            }
+            const rms = Math.sqrt(sumSquares / dataArray.length);
+        
+            // Convert RMS to decibels (dB)
+            const dB = 20 * Math.log10(rms);
+        
+            // Clear the canvas
+            amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
+        
+            // Map dB to canvas height
+            const barHeight = ((dB + 100) / 100) * amplitudecanvas.height; // Adjusting dB range for visualization
+        
+            // Draw the volume bar
+            amplitudectx.fillStyle = 'lime';
+            amplitudectx.fillRect(0, amplitudecanvas.height - barHeight, amplitudecanvas.width, barHeight);
+        
+            // Optionally, request the next animation frame for continuous visualization
+            // requestAnimationFrame(visualizeVolume);
+        }*/
+            function visualizeVolume() {
+                // Retrieve time-domain data
+                analyser.getFloatTimeDomainData(dataArray);
+            
+                // Calculate RMS (Root Mean Square)
+                let sumSquares = 0;
+                for (let i = 0; i < dataArray.length; i++) {
+                    sumSquares += dataArray[i] * dataArray[i];
+                }
+                const rms = Math.sqrt(sumSquares / dataArray.length);
+            
+                // Convert RMS to decibels (dB)
+                const dB = 20 * Math.log10(rms);
+            
+                // Clear the canvas
+                amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
+            
+                // Map dB to canvas height
+                const minDB = -80; // Adjust based on noise floor
+                const maxDB = 0;   // 0 dB is the max reference level
+                const barHeight = ((dB - minDB) / (maxDB - minDB)) * (amplitudecanvas.height-50);
+            
+                // Draw the volume bar
+                amplitudectx.fillStyle = 'lime';
+                amplitudectx.fillRect(50, amplitudecanvas.height - barHeight-25, amplitudecanvas.width - 50, barHeight);
+            
+                // Draw the axis
+                amplitudectx.strokeStyle = 'black';
+                amplitudectx.lineWidth = 2;
+                amplitudectx.beginPath();
+                amplitudectx.moveTo(50, 25);
+                amplitudectx.lineTo(50, amplitudecanvas.height-25);
+                amplitudectx.stroke();
+            
+                // Draw labels
+                amplitudectx.fillStyle = 'black';
+                amplitudectx.font = '12px Arial';
+                for (let d = minDB; d <= maxDB; d += 20) {
+                    const y = amplitudecanvas.height - ((d - minDB) / (maxDB - minDB)) * (amplitudecanvas.height-50)-25;
+                    amplitudectx.fillText(`${d} dB`, 5, y + 4); // Position labels slightly offset for readability
+                    amplitudectx.beginPath();
+                    amplitudectx.moveTo(45, y);
+                    amplitudectx.lineTo(50, y);
+                    amplitudectx.stroke();
+                }
+            }
+            
+        
     
 
     // Main loop to update the volume visualization
@@ -479,8 +564,8 @@ navigator.mediaDevices.getUserMedia({ audio: true })
       
     setInterval(()=>{
         drawSpectrum();
-        drawSpectrogram();
         updateVolumeMeter();
+        drawSpectrogram();
     },1000/60);
     /*requestAnimationFrame(draw);
     console.log("aaa");
