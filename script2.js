@@ -96,6 +96,8 @@ navigator.mediaDevices.getUserMedia({ audio: true })
 
     // Create an Analyser Node: Set up an AnalyserNode to extract frequency and amplitude data.
     const analyser = audioContext.createAnalyser();
+    analyser.minDecibels = -100; // Minimum decibel value (default -100)
+    analyser.maxDecibels = 0;     // Maximum decibel value (default -30)
     analyser.fftSize = 2048; // Determines the frequency resolution
     source.connect(analyser);
 
@@ -120,7 +122,8 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     let drawOffset = 0;
     function amplitudeToColor(amplitude) {
         const value = amplitude / 255; // Normalize amplitude to [0, 1]
-        const hue = (1 - value) * 240; // Map amplitude to hue (blue to red)
+        //const hue = (1 - value) * 240; // Map amplitude to hue (blue to red)
+        const hue = (1 - value*1.5) * 240; // Map amplitude to hue (blue to red)
         return `hsl(${hue}, 100%, 50%)`;
     }
     
@@ -208,6 +211,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         for (let i = 0; i < timeDomainDataArray.length; i++) {
             sum += timeDomainDataArray[i] * timeDomainDataArray[i]; // Square each sample
         }
+        //console.log(timeDomainDataArray);
         let rms = Math.sqrt(sum / timeDomainDataArray.length); // Root mean square (RMS)
         let volume = Math.max(0, Math.min(1, rms / 128)); // Normalize RMS to a 0-1 range
         return volume;
@@ -216,11 +220,47 @@ navigator.mediaDevices.getUserMedia({ audio: true })
 
     // Function to visualize the volume on the canvas
     function visualizeVolume(volume) {
-        amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height); // Clear the previous frame
-        const barHeight = volume * amplitudecanvas.height; // Map volume to canvas height
-        amplitudectx.fillStyle = 'rgb(0, 255, 0)'; // Color of the meter
-        amplitudectx.fillRect(0, amplitudecanvas.height - barHeight, amplitudecanvas.width, barHeight);
+        // .
+        //amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height); // Clear the previous frame
+        //const barHeight = volume * amplitudecanvas.height; // Map volume to canvas height
+        ////console.log(volume);
+        //amplitudectx.fillStyle = 'rgb(0, 255, 0)'; // Color of the meter
+        //amplitudectx.fillRect(0, amplitudecanvas.height - barHeight, amplitudecanvas.width, barHeight);
+        // .
+        /*amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
+
+        dataArray.forEach((value, index) => {
+            const percent = value / 255;
+            const height = amplitudecanvas.height * percent;
+            const offset = amplitudecanvas.height - height;
+            const barWidth = amplitudecanvas.width / bufferLength;
+            amplitudectx.fillStyle = `rgb(${(1 - percent) * 255}, ${percent * 255}, 0)`;
+            amplitudectx.fillRect(index * barWidth, offset, barWidth, height);
+        }); //... chatgpt why that's the wrong thing...*/
+        // .
+
+        analyser.getByteFrequencyData(dataArray);
+    
+        amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
+    
+        let sum = 0;
+        dataArray.forEach(value => {
+            sum += value;
+        });
+        const average = sum / dataArray.length;
+        const dB = -Math.log10(average / 255) * 20;
+    
+        amplitudectx.fillStyle = 'green';
+        amplitudectx.fillRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
+    
+        amplitudectx.fillStyle = 'red';
+        amplitudectx.fillRect(0, 0, amplitudecanvas.width, (dB / 100) * amplitudecanvas.height);
+    
+        //requestAnimationFrame(draw);
+
+
     }
+    
 
     // Main loop to update the volume visualization
     function updateVolumeMeter() {
