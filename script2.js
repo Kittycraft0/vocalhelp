@@ -163,7 +163,8 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         // Return the corresponding HSL color
         return `hsl(${hue}, 100%, 50%)`;
     }
-        
+    // logarithmic, linear, ...
+    let visualtype="logarithmic";
     spectrogramctx.fillStyle = 'rgb(0, 0, 0)';
     spectrogramctx.rect(50,50,50,50);
     spectrogramctx.stroke();
@@ -178,17 +179,56 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         // Scroll the image left
         const imageData = spectrogramctx.getImageData(1, 0, spectrogramcanvas.width - 1, spectrogramcanvas.height);
         spectrogramctx.putImageData(imageData, 0, 0);
-      
+        
+        if(visualtype=="linear"){
         // Draw the new frequencies on the right edge
         for (let i = 0; i < bufferLength; i++) {
             const value = dataArray[i];
             const percent = i / bufferLength;
+            
+            //finding the frequency from the index
+            let frequency = Math.round(i * 44100 / 2 / bufferLength)
+            //need to convert db Value because it is -120 to 0
+            let barHeight = (value / 2 + 70) * 10
+            //let y = frequencyToXAxis(frequency)
+
             const y = Math.floor(percent * spectrogramcanvas.height);
             const color = amplitudeToColor(value);
             spectrogramctx.fillStyle = color;
             spectrogramctx.fillRect(spectrogramcanvas.width - 1, spectrogramcanvas.height - y, 1, 1);
             //console.log("b");
         }
+        //draw(){
+            //const {audioData} = this.props
+        }else if(visualtype=="logarithmic"){
+            const canvas = spectrogramcanvas;
+            const height = canvas.height
+            const width = canvas.width
+            const context = spectrogramctx;
+            //context.clearRect(0, 0, width, height)
+            audioData=dataArray;
+            
+            //loop to create the bars so I get to 20k!
+            for (let i = 0; i < bufferLength; i++) {
+             let value = audioData[i]
+            
+             //finding the frequency from the index
+             let frequency = Math.round(i * 44100 / 2 / bufferLength)
+             //need to convert db Value because it is -120 to 0
+             let barHeight = (value / 2 + 70) * 10
+             let barWidth = width / bufferLength * 2.5
+             context.fillStyle = amplitudeToColor(value)//'rgb(' + (barHeight + 200) + ',100,100)'
+             //finding the x location px from the frequency
+             let x = frequencyToXAxis(frequency)/2.1
+             let h = height - barHeight / 2
+             let barbreadth=frequencyToXAxis(Math.round((i+1) * 44100 / 2 / bufferLength)/2.1-frequency/2.1);
+             if (h > 0) {
+              //context.fillRect(x, h, barWidth, barHeight)
+              context.fillRect(width-1, height-x, 1, barbreadth)
+             }
+            }
+        }
+          //}
         //console.log("aaah");
     }
     
@@ -248,6 +288,8 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         spectrumctx.fillRect(0, 0, spectrumcanvas.width, spectrumcanvas.height);
     
         const bufferLength = dataArraysmooth.length;
+        
+        if(visualtype=="linear"){
         let barHeight = spectrumcanvas.height / bufferLength;  // Set bar width based on canvas width and number of bars
         let y = spectrumcanvas.height;
     
@@ -271,6 +313,39 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     
             // Increment x position for the next bar
             y -= barHeight;
+        }
+
+        }else if(visualtype=="logarithmic"){
+        const canvas = spectrumcanvas;
+        const height = canvas.height
+        const width = canvas.width
+        const context = spectrumctx;
+        //context.clearRect(0, 0, width, height)
+        audioData=dataArray;
+        
+        //loop to create the bars so I get to 20k!
+        for (let i = 0; i < bufferLength; i++) {
+            let value = audioData[i]
+            
+            //finding the frequency from the index
+            let frequency = Math.round(i * 44100 / 2 / bufferLength)
+            //need to convert db Value because it is -120 to 0
+            let barHeight = (value / 2 + 70) * 10/5
+            let barWidth = width / bufferLength * 2.5
+            context.fillStyle = amplitudeToColor(value)//'rgb(' + (barHeight + 200) + ',100,100)'
+            //finding the x location px from the frequency
+            let x = frequencyToXAxis(frequency)/2.1
+            let h = width - barHeight //??? had a /2, did i put that there?
+            let barbreadth=frequencyToXAxis(Math.round((i+1) * 44100 / 2 / bufferLength)/2.1-frequency/2.1);
+            if (h > 0) {
+                //context.fillRect(0, height-x, h/8, barbreadth)
+                context.fillRect(h, x, 1, barHeight)
+                context.fillRect(0,0,10,10);
+                //context.fillRect(h, x, barHeight, 1)
+                //context.fillRect(width-1, height-x, 1, barbreadth)
+                //context.fillRect(width-1, height-x, h, barbreadth)
+            }
+        }
         }
     }
 
