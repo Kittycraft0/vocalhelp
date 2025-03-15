@@ -93,17 +93,28 @@ navigator.mediaDevices.getUserMedia({ audio: true })
 
     // Create a Media Stream Source: Convert the media stream into a source node that the audio context can process.
     const source = audioContext.createMediaStreamSource(stream);
+    const sourcesmooth = audioContext.createMediaStreamSource(stream);
 
     // Create an Analyser Node: Set up an AnalyserNode to extract frequency and amplitude data.
     const analyser = audioContext.createAnalyser();
+    const analysersmooth = audioContext.createAnalyser();
     analyser.minDecibels = -100; // Minimum decibel value (default -100)
     analyser.maxDecibels = 0;     // Maximum decibel value (default -30)
     analyser.fftSize = 2048; // Determines the frequency resolution
+    analyser.smoothingTimeConstant=0; // (default 0.8)
     source.connect(analyser);
 
+    analysersmooth.minDecibels = -100; // Minimum decibel value (default -100)
+    analysersmooth.maxDecibels = 0;     // Maximum decibel value (default -30)
+    analysersmooth.fftSize = 2048; // Determines the frequency resolution
+    console.log("constant: "+analysersmooth.smoothingTimeConstant);
+    sourcesmooth.connect(analysersmooth);
+    
     // Extract Frequency Data: Retrieve the frequency data using a Uint8Array.
     const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
+    const bufferLengthsmooth = analysersmooth.frequencyBinCount;
+    const dataArraysmooth = new Uint8Array(bufferLengthsmooth);
 
     function getFrequencyData() {
         analyser.getByteFrequencyData(dataArray);
@@ -178,17 +189,19 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     function drawSpectrum() {
         //requestAnimationFrame(draw);
         
-        getFrequencyData();
+        //getFrequencyData();
+        analysersmooth.getByteFrequencyData(dataArraysmooth);
+        
         
         // Spectrum visualization code here
         spectrumctx.fillStyle = 'rgb(0, 0, 0)';
         spectrumctx.fillRect(0,0,spectrumcanvas.width,spectrumcanvas.height);
         //spectrumctx.clearRect(0,0,spectrumcanvas.width,spectrumcanvas.height);
-        let barHeight = (spectrumcanvas.height / bufferLength) * 2.5;
+        let barHeight = (spectrumcanvas.height / bufferLengthsmooth) * 2.5;
         let barWidth;
         let y = spectrumcanvas.height;
-        for (let i = 0; i < bufferLength; i++) {
-            value = dataArray[i];
+        for (let i = 0; i < bufferLengthsmooth; i++) {
+            value = dataArraysmooth[i];
             barWidth = value/255*spectrumcanvas.width;
             spectrumctx.fillStyle = 'rgb(' + (value + 100) + ',50,50)';
             // right justified right to left
@@ -264,7 +277,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
 
     // Main loop to update the volume visualization
     function updateVolumeMeter() {
-        getTimeDomainData();
+        analyser.getByteTimeDomainData(timeDomainDataArray);
         visualizeVolume(calculateVolume(timeDomainDataArray));
         //requestAnimationFrame(updateVolumeMeter); // Repeat the process
     }
