@@ -187,7 +187,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             const percent = i / bufferLength;
             
             //finding the frequency from the index
-            let frequency = Math.round(i * 44100 / 2 / bufferLength)
+            let frequency = Math.round(i * 48000 / 2 / bufferLength)
             //need to convert db Value because it is -120 to 0
             let barHeight = (value / 2 + 70) * 10
             //let y = frequencyToXAxis(frequency)
@@ -210,22 +210,61 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             
             //loop to create the bars so I get to 20k!
             for (let i = 0; i < bufferLength; i++) {
-             let value = audioData[i]
+             /*let value = audioData[i]
             
              //finding the frequency from the index
-             let frequency = Math.round(i * 44100 / 2 / bufferLength)
+             let frequency = Math.round(i * 48000 / 2 / bufferLength)
              //need to convert db Value because it is -120 to 0
              let barHeight = (value / 2 + 70) * 10
              let barWidth = width / bufferLength * 2.5
              context.fillStyle = amplitudeToColor(value)//'rgb(' + (barHeight + 200) + ',100,100)'
              //finding the x location px from the frequency
              let x = frequencyToXAxis(frequency)/2.1
-             let h = height - barHeight / 2
-             let barbreadth=frequencyToXAxis(Math.round((i+1) * 44100 / 2 / bufferLength)/2.1-frequency/2.1);
+             let h = height - barHeight
+             let barbreadth=frequencyToXAxis(Math.round((i+1) * 48000 / 2 / bufferLength)/2.1-x);
              if (h > 0) {
               //context.fillRect(x, h, barWidth, barHeight)
-              context.fillRect(width-1, height-x, 1, barbreadth)
-             }
+              //context.fillRect(width-1, height-x, 1, barbreadth)
+                    let b=frequencyToXAxis(Math.round(1 * 48000 / 2 / bufferLength))/2.1
+              context.fillRect(h, height-x+b, 1, -barbreadth)
+             }*/
+            let value = audioData[i]
+            
+            //finding the frequency from the index
+            let frequency = Math.round(i * 48000 / 2 / bufferLength)
+            //need to convert db Value because it is -120 to 0
+            let barHeight = (value / 2 + 70) * 10/5
+            let barWidth = width / bufferLength * 2.5
+            context.fillStyle = amplitudeToColor(value)//'rgb(' + (barHeight + 200) + ',100,100)'
+            //finding the x location px from the frequency
+            let x = frequencyToXAxis(frequency)/2.1
+            let h = width - barHeight //??? had a /2, did i put that there?
+            // bar breadth equals next x position minus current x position!?!?!? what ohh...???? no? what
+            //let barbreadth=frequencyToXAxis(Math.round((i+1) * 48000 / 2 / bufferLength)/2.1-x);
+            let barbreadth=frequencyToXAxis(Math.round((i+1) * 48000 / 2 / bufferLength))/2.1-x;
+            if (h > 0) {
+                //context.fillRect(0, height-x, h/8, barbreadth)
+                let screaming=false;
+                if(screaming){
+                    context.fillRect(h, x, 1, barHeight)
+                }else{
+                    let b=frequencyToXAxis(Math.round(1 * 48000 / 2 / bufferLength))/2.1
+                    // math moment
+                    // it failed :(
+        //let b=(Math.log(Math.round(0*48000/2/bufferLength))/Math.log(10)-Math.log(20)/Math.log(10))/(Math.log(20000)/Math.log(10)-Math.log(20)/Math.log(10))*945
+        // cringe log of 0
+        // what
+        //let b=(Math.log(0)/Math.log(10)-Math.log(20)/Math.log(10))/(Math.log(20000)/Math.log(10)-Math.log(20)/Math.log(10))*945
+                    
+                    // yay it worked ok i fixed it nice
+
+                    context.fillRect(width-1, height-x+b, 1, -barbreadth)
+                }
+                //context.fillRect(0,0,10,10);
+                //context.fillRect(h, x, barHeight, 1)
+                //context.fillRect(width-1, height-x, 1, barbreadth)
+                //context.fillRect(width-1, height-x, h, barbreadth)
+            }
             }
         }
           //}
@@ -328,7 +367,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             let value = audioData[i]
             
             //finding the frequency from the index
-            let frequency = Math.round(i * 44100 / 2 / bufferLength)
+            let frequency = Math.round(i * 48000 / 2 / bufferLength)
             //need to convert db Value because it is -120 to 0
             let barHeight = (value / 2 + 70) * 10/5
             let barWidth = width / bufferLength * 2.5
@@ -336,11 +375,29 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             //finding the x location px from the frequency
             let x = frequencyToXAxis(frequency)/2.1
             let h = width - barHeight //??? had a /2, did i put that there?
-            let barbreadth=frequencyToXAxis(Math.round((i+1) * 44100 / 2 / bufferLength)/2.1-frequency/2.1);
+            // bar breadth equals next x position minus current x position!?!?!? what ohh...???? no? what
+            //let barbreadth=frequencyToXAxis(Math.round((i+1) * 48000 / 2 / bufferLength)/2.1-x);
+            let barbreadth=frequencyToXAxis(Math.round((i+1) * 48000 / 2 / bufferLength))/2.1-x;
             if (h > 0) {
                 //context.fillRect(0, height-x, h/8, barbreadth)
-                context.fillRect(h, x, 1, barHeight)
-                context.fillRect(0,0,10,10);
+                let screaming=false;
+                if(screaming){
+                    context.fillRect(h, x, 1, barHeight)
+                }else{
+                    let b=frequencyToXAxis(Math.round(1 * 48000 / 2 / bufferLength))/2.1
+                    // math moment
+                    // it failed :(
+        //let b=(Math.log(Math.round(0*48000/2/bufferLength))/Math.log(10)-Math.log(20)/Math.log(10))/(Math.log(20000)/Math.log(10)-Math.log(20)/Math.log(10))*945
+        // cringe log of 0
+        // what
+        //let b=(Math.log(0)/Math.log(10)-Math.log(20)/Math.log(10))/(Math.log(20000)/Math.log(10)-Math.log(20)/Math.log(10))*945
+                    
+                    // yay it worked ok i fixed it nice
+
+                    //context.fillRect(h, height-x+b, barHeight, -barbreadth)
+                    context.fillRect(0, height-x+b, barHeight, -barbreadth)
+                }
+                //context.fillRect(0,0,10,10);
                 //context.fillRect(h, x, barHeight, 1)
                 //context.fillRect(width-1, height-x, 1, barbreadth)
                 //context.fillRect(width-1, height-x, h, barbreadth)
