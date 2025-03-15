@@ -89,7 +89,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     console.log('Microphone access granted.');
 
     // Create an Audio Context: Initialize an AudioContext, which serves as the main interface to the Web Audio API.
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)({sampleRate: 48000});
 
     // Create a Media Stream Source: Convert the media stream into a source node that the audio context can process.
     const source = audioContext.createMediaStreamSource(stream);
@@ -98,20 +98,21 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     // Create an Analyser Node: Set up an AnalyserNode to extract frequency and amplitude data.
     const analyser = audioContext.createAnalyser();
     const analysersmooth = audioContext.createAnalyser();
-    analyser.minDecibels = -100; // Minimum decibel value (default -100)
+    analyser.minDecibels = -96; // Minimum decibel value (default -100)
     analyser.maxDecibels = 0;     // Maximum decibel value (default -30)
-    analyser.fftSize = 2048; // Determines the frequency resolution
+    analyser.fftSize = 4096; // Determines the frequency resolution
     analyser.smoothingTimeConstant=0; // (default 0.8)
     source.connect(analyser);
 
-    analysersmooth.minDecibels = -100; // Minimum decibel value (default -100)
+    analysersmooth.minDecibels = -96; // Minimum decibel value (default -100)
     analysersmooth.maxDecibels = 0;     // Maximum decibel value (default -30)
-    analysersmooth.fftSize = 2048; // Determines the frequency resolution
+    analysersmooth.fftSize = 4096; // Determines the frequency resolution
     console.log("constant: "+analysersmooth.smoothingTimeConstant);
     sourcesmooth.connect(analysersmooth);
     
     // Extract Frequency Data: Retrieve the frequency data using a Uint8Array.
     const bufferLength = analyser.frequencyBinCount;
+    //this.setState({bufferLength}) //????????
     //const dataArray = new Uint8Array(bufferLength);
     const dataArray = new Float32Array(bufferLength);
     const bufferLengthsmooth = analysersmooth.frequencyBinCount;
@@ -135,13 +136,23 @@ navigator.mediaDevices.getUserMedia({ audio: true })
 
 
     // Spectrogram
-    let drawOffset = 0;
+    //let drawOffset = 0; //????????
     /*function amplitudeToColor(amplitude) {
         const value = amplitude / 255; // Normalize amplitude to [0, 1]
         //const hue = (1 - value) * 240; // Map amplitude to hue (blue to red)
         const hue = (1 - value*1.5) * 240; // Map amplitude to hue (blue to red)
         return `hsl(${hue}, 100%, 50%)`;
     }*/
+    // https://abarrafato.medium.com/building-a-real-time-spectrum-analyzer-plot-using-html5-canvas-web-audio-api-react-46a495a06cbf
+    function frequencyToXAxis(frequency) {
+        const minF = Math.log(20) / Math.log(10)
+        const maxF = Math.log(20000) / Math.log(10)
+        
+        let range = maxF - minF
+        let xAxis = (Math.log(frequency) / Math.log(10) - minF) / range  
+         * 945
+        return xAxis
+    }
     function amplitudeToColor(amplitude) {
         // Normalize amplitude to a 0-1 range, handling -Infinity
         const normalizedAmplitude = amplitude === -Infinity ? 0 : Math.min(1, Math.max(0, (amplitude + 96) / 96));
@@ -180,23 +191,16 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         }
         //console.log("aaah");
     }
-    drawSpectrogram();
     
+    // Draw red lines on the spectrogram for testing or idk
     setInterval(()=>{
-        // Scroll the image left
+        // Scroll the spectrogram left
         const imageData = spectrogramctx.getImageData(1, 0, spectrogramcanvas.width - 1, spectrogramcanvas.height);
         spectrogramctx.putImageData(imageData, 0, 0);
       
-        // Draw the new frequencies on the right edge
-        for (let i = 0; i < bufferLength; i++) {
-            const value = dataArray[i];
-            const percent = i / bufferLength;
-            const y = Math.floor(percent * spectrogramcanvas.height);
-            const color = amplitudeToColor(value);
-            spectrogramctx.fillStyle = `rgb(255,0,0)`;//color;
-            spectrogramctx.fillRect(spectrogramcanvas.width - 1, spectrogramcanvas.height - y, 1, 1);
-            //console.log("b");
-        }
+        // Draw red line on the right edge
+        spectrogramctx.fillStyle = `rgb(255,0,0)`;
+        spectrogramctx.fillRect(spectrogramcanvas.width - 1, 0, 1, spectrogramcanvas.height);
     },1000);
     
 
@@ -376,7 +380,11 @@ navigator.mediaDevices.getUserMedia({ audio: true })
       
 
     
-
+    function componentWillUnmount() {
+        cancelAnimationFrame(this.rafId)
+        this.analyser.disconnect()
+        this.source.disconnect()
+    }
 })
 .catch(function(err) {
     console.error('The following error occurred: ' + err);
