@@ -112,32 +112,47 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     
     // Extract Frequency Data: Retrieve the frequency data using a Uint8Array.
     const bufferLength = analyser.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
+    //const dataArray = new Uint8Array(bufferLength);
+    const dataArray = new Float32Array(bufferLength);
     const bufferLengthsmooth = analysersmooth.frequencyBinCount;
-    const dataArraysmooth = new Uint8Array(bufferLengthsmooth);
+    //const dataArraysmooth = new Uint8Array(bufferLengthsmooth);
+    const dataArraysmooth = new Float32Array(bufferLengthsmooth);
 
     function getFrequencyData() {
-        analyser.getByteFrequencyData(dataArray);
+        //analyser.getByteFrequencyData(dataArray);
+        analyser.getFloatFrequencyData(dataArray);
         // dataArray now contains frequency data
     }
     // Extract Amplitude (Time-Domain) Data: Obtain the time-domain data to analyze the waveform.
-    const timeDomainDataArray = new Uint8Array(bufferLength);
+    //const timeDomainDataArray = new Uint8Array(bufferLength);
+    const timeDomainDataArray = new Float32Array(bufferLength);
 
     function getTimeDomainData() {
-        analyser.getByteTimeDomainData(timeDomainDataArray);
+        //analyser.getByteTimeDomainData(timeDomainDataArray);
+        analyser.getFloatTimeDomainData(timeDomainDataArray);
         // timeDomainDataArray now contains amplitude data
     }
 
 
     // Spectrogram
     let drawOffset = 0;
-    function amplitudeToColor(amplitude) {
+    /*function amplitudeToColor(amplitude) {
         const value = amplitude / 255; // Normalize amplitude to [0, 1]
         //const hue = (1 - value) * 240; // Map amplitude to hue (blue to red)
         const hue = (1 - value*1.5) * 240; // Map amplitude to hue (blue to red)
         return `hsl(${hue}, 100%, 50%)`;
+    }*/
+    function amplitudeToColor(amplitude) {
+        // Normalize amplitude to a 0-1 range, handling -Infinity
+        const normalizedAmplitude = amplitude === -Infinity ? 0 : Math.min(1, Math.max(0, (amplitude + 96) / 96));
+
+        // Map normalized amplitude to hue (blue to red)
+        const hue = (1 - normalizedAmplitude*1.5) * 240;
+
+        // Return the corresponding HSL color
+        return `hsl(${hue}, 100%, 50%)`;
     }
-    
+        
     spectrogramctx.fillStyle = 'rgb(0, 0, 0)';
     spectrogramctx.rect(50,50,50,50);
     spectrogramctx.stroke();
@@ -145,7 +160,9 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     function drawSpectrogram() {
         //requestAnimationFrame(drawSpectrogram);
       
-        analyser.getByteFrequencyData(dataArray);
+        //analyser.getByteFrequencyData(dataArray);
+        analyser.getFloatFrequencyData(dataArray);
+        //console.log(dataArray);
       
         // Scroll the image left
         const imageData = spectrogramctx.getImageData(1, 0, spectrogramcanvas.width - 1, spectrogramcanvas.height);
@@ -183,14 +200,19 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     },1000);
     
 
+    /*    function h(){
+        return(<div>hello</div>); //what
+    }*/
+    // https://abarrafato.medium.com/building-a-real-time-spectrum-analyzer-plot-using-html5-canvas-web-audio-api-react-46a495a06cbf
 
 
     // Visualize the Data: Use the extracted data to create visualizations, such as frequency bars or waveforms.
-    function drawSpectrum() {
+    /*function drawSpectrum() {
         //requestAnimationFrame(draw);
         
         //getFrequencyData();
-        analysersmooth.getByteFrequencyData(dataArraysmooth);
+        //analysersmooth.getByteFrequencyData(dataArraysmooth);
+        analysersmooth.getFloatFrequencyData(dataArraysmooth);
         
         
         // Spectrum visualization code here
@@ -212,10 +234,40 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         }
 
         // Spectrogram visualization code here
+    }*/
+    function drawSpectrum() {
+        // Get the frequency data
+        analysersmooth.getFloatFrequencyData(dataArraysmooth);
         
-        
-
-
+        // Clear the canvas before drawing
+        spectrumctx.fillStyle = 'rgb(0, 0, 0)';
+        spectrumctx.fillRect(0, 0, spectrumcanvas.width, spectrumcanvas.height);
+    
+        const bufferLength = dataArraysmooth.length;
+        let barHeight = spectrumcanvas.height / bufferLength;  // Set bar width based on canvas width and number of bars
+        let y = spectrumcanvas.height;
+    
+        // Iterate through the frequency data and draw the bars
+        for (let i = 0; i < bufferLength; i++) {
+            let value = dataArraysmooth[i];
+    
+            // Normalize amplitude to 0-1 (for easier color mapping)
+            const normalizedValue = Math.max(0, Math.min(1, (value + 96) / 96));  // Normalize based on the typical -96 dBFS as the lowest value
+    
+            // Calculate bar height based on the frequency value (this can be adjusted for desired scaling)
+            //let barHeight = (value + 96) * (spectrumcanvas.height / 96);  // Adjust the height based on value (higher frequency will be taller)
+            let barWidth = (value + 96) * (spectrumcanvas.width / 96);
+    
+            // Calculate color based on the normalized amplitude
+            const color = amplitudeToColor(value); // Use your existing color function
+    
+            // Set the color and draw the bar
+            spectrumctx.fillStyle = color;
+            spectrumctx.fillRect(0, y, barWidth, barHeight);
+    
+            // Increment x position for the next bar
+            y -= barHeight;
+        }
     }
 
     // Function to calculate volume (rms)
@@ -252,7 +304,8 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         }); //... chatgpt why that's the wrong thing...*/
         // .
 
-        analyser.getByteFrequencyData(dataArray);
+        //analyser.getByteFrequencyData(dataArray);
+        analyser.getFloatFrequencyData(dataArray);
     
         amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
     
@@ -277,7 +330,9 @@ navigator.mediaDevices.getUserMedia({ audio: true })
 
     // Main loop to update the volume visualization
     function updateVolumeMeter() {
-        analyser.getByteTimeDomainData(timeDomainDataArray);
+        //analyser.getByteTimeDomainData(timeDomainDataArray);
+        analyser.getFloatTimeDomainData(timeDomainDataArray);
+        
         visualizeVolume(calculateVolume(timeDomainDataArray));
         //requestAnimationFrame(updateVolumeMeter); // Repeat the process
     }
