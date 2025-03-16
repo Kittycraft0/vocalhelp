@@ -10,6 +10,12 @@ var amplitudecanvas=document.getElementById("soundlevelmeter");
 const amplitudectx=amplitudecanvas.getContext("2d");
 spectrogramctx.fillStyle = 'rgb(255, 255, 0)';
 spectrogramctx.fillRect(0,0,spectrogramcanvas.width,spectrogramcanvas.height);
+var formantcanvas=document.getElementById("formantmeter");
+const formantctx=formantcanvas.getContext("2d");
+var vocalweightcanvas=document.getElementById("vocalweightmeter");
+const vocalweightectx=vocalweightcanvas.getContext("2d");
+var fullnesscanvas=document.getElementById("fullnessmeter");
+const fullnessectx=fullnesscanvas.getContext("2d");
 
 //specXaxiscanvas.width=spectrogramcanvas.width;
 //specXaxisctx.scale(-1,1);
@@ -106,7 +112,8 @@ navigator.mediaDevices.getUserMedia({ audio: true })
 
     analysersmooth.minDecibels = -96; // Minimum decibel value (default -100)
     analysersmooth.maxDecibels = 0;     // Maximum decibel value (default -30)
-    analysersmooth.fftSize = 4096; // Determines the frequency resolution
+    analysersmooth.fftSize = 4096; // Determines the frequency resolution (default 4096?)
+    analysersmooth.smoothingTimeConstant=0.8; // (default 0.8)
     console.log("constant: "+analysersmooth.smoothingTimeConstant);
     sourcesmooth.connect(analysersmooth);
     
@@ -362,20 +369,24 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         const context = spectrumctx;
         //context.clearRect(0, 0, width, height)
         audioData=dataArray;
+        audioDatasmooth=dataArraysmooth;
         
         //loop to create the bars so I get to 20k!
-        for (let i = 0; i < bufferLength; i++) {
+        for (let i = 0; i < bufferLengthsmooth; i++) {
             let value = audioData[i]
+            let valuesmooth = audioDatasmooth[i]
             
             //finding the frequency from the index
             let frequency = Math.round(i * 48000 / 2 / bufferLength)
             //need to convert db Value because it is -120 to 0
             let barHeight = (value / 2 + 70) * 10/5
+            let barHeightsmooth = (valuesmooth / 2 + 70) * 10/5
             let barWidth = width / bufferLength * 2.5
             context.fillStyle = amplitudeToColor(value)//'rgb(' + (barHeight + 200) + ',100,100)'
             //finding the x location px from the frequency
             let x = frequencyToXAxis(frequency)/2.1
             let h = width - barHeight //??? had a /2, did i put that there?
+            let hsmooth = width - barHeightsmooth //??? had a /2, did i put that there?
             // bar breadth equals next x position minus current x position!?!?!? what ohh...???? no? what
             //let barbreadth=frequencyToXAxis(Math.round((i+1) * 48000 / 2 / bufferLength)/2.1-x);
             let barbreadth=frequencyToXAxis(Math.round((i+1) * 48000 / 2 / bufferLength))/2.1-x;
@@ -384,20 +395,25 @@ navigator.mediaDevices.getUserMedia({ audio: true })
                 let screaming=false;
                 if(screaming){
                     context.fillRect(h, x, 1, barHeight)
+                    //context.fillRect(hsmooth, x, 1, barHeightsmooth)
                 }else{
                     let b=frequencyToXAxis(Math.round(1 * 48000 / 2 / bufferLength))/2.1
-                    // math moment
-                    // it failed :(
-        //let b=(Math.log(Math.round(0*48000/2/bufferLength))/Math.log(10)-Math.log(20)/Math.log(10))/(Math.log(20000)/Math.log(10)-Math.log(20)/Math.log(10))*945
-        // cringe log of 0
-        // what
-        //let b=(Math.log(0)/Math.log(10)-Math.log(20)/Math.log(10))/(Math.log(20000)/Math.log(10)-Math.log(20)/Math.log(10))*945
-                    
-                    // yay it worked ok i fixed it nice
-
-                    //context.fillRect(h, height-x+b, barHeight, -barbreadth)
                     context.fillRect(0, height-x+b, barHeight, -barbreadth)
+                    //context.fillRect(0, height-x+b, barHeightsmooth, -barbreadth)
+                    
                 }
+
+                //context.fillStyle = amplitudeToColor(valuesmooth)//'rgb(' + (barHeight + 200) + ',100,100)'
+                context.fillStyle = 'rgb(0,0,0)'
+                if(screaming){
+                    context.fillRect(hsmooth+barHeightsmooth, x, 1, 1)
+                    //context.fillRect(h+barHeight, x, 1, 1)
+                }else{
+                    let b=frequencyToXAxis(Math.round(1 * 48000 / 2 / bufferLength))/2.1
+                    context.fillRect(barHeightsmooth, height-x+b, 1, -barbreadth)
+                    //context.fillRect(barHeight, height-x+b, 1, -barbreadth)
+                }
+                
                 //context.fillRect(0,0,10,10);
                 //context.fillRect(h, x, barHeight, 1)
                 //context.fillRect(width-1, height-x, 1, barbreadth)
@@ -509,22 +525,54 @@ navigator.mediaDevices.getUserMedia({ audio: true })
                     sumSquares += dataArray[i] * dataArray[i];
                 }
                 const rms = Math.sqrt(sumSquares / dataArray.length);
-            
                 // Convert RMS to decibels (dB)
                 const dB = 20 * Math.log10(rms);
             
+
+                
+                // Retrieve time-domain data
+                analysersmooth.getFloatTimeDomainData(dataArraysmooth);
+                // Calculate RMS (Root Mean Square)
+                let sumSquaressmooth = 0;
+                for (let i = 0; i < dataArraysmooth.length; i++) {
+                    sumSquaressmooth += dataArraysmooth[i] * dataArraysmooth[i];
+                }
+                const rmssmooth = Math.sqrt(sumSquaressmooth / dataArraysmooth.length);
+                // Convert RMS to decibels (dB)
+                const dBsmooth = 20 * Math.log10(rmssmooth);
+            
+                
                 // Clear the canvas
                 amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
             
                 // Map dB to canvas height
                 const minDB = -80; // Adjust based on noise floor
                 const maxDB = 0;   // 0 dB is the max reference level
+
                 const barHeight = ((dB - minDB) / (maxDB - minDB)) * (amplitudecanvas.height-50);
-            
+                
+                const barHeightsmooth = ((dBsmooth - minDB) / (maxDB - minDB)) * (amplitudecanvas.height-50);
+                
+                
+                // Draw faded background
+                //-7.8, -20
+                amplitudectx.fillStyle = 'rgb(0,96,0)';
+                amplitudectx.fillRect(50, 25, amplitudecanvas.width-50, 80/80*(amplitudecanvas.height-50));
+                amplitudectx.fillStyle = 'rgb(128,96,0)';
+                amplitudectx.fillRect(50, 25, amplitudecanvas.width-50, 20/80*(amplitudecanvas.height-50));
+                amplitudectx.fillStyle = 'rgb(128,0,0)';
+                amplitudectx.fillRect(50, 25, amplitudecanvas.width-50, 7.8/80*(amplitudecanvas.height-50));
+                
+
                 // Draw the volume bar
                 amplitudectx.fillStyle = 'lime';
                 amplitudectx.fillRect(50, amplitudecanvas.height - barHeight-25, amplitudecanvas.width - 50, barHeight);
-            
+                
+                // Draw the thingy
+                amplitudectx.fillStyle = 'black';
+                amplitudectx.fillRect(50, amplitudecanvas.height - barHeightsmooth-25, amplitudecanvas.width - 50, 5);
+                //console.log(dBsmooth);
+
                 // Draw the axis
                 amplitudectx.strokeStyle = 'black';
                 amplitudectx.lineWidth = 2;
