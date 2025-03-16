@@ -2,8 +2,74 @@
 
 // everything gets put into data!!!!!!!!!!!
 const data = {
-    visualType:"logarithmic",
-    drawSpectrogramSecondLines:false,
+    visualType: "logarithmic",
+    drawSpectrogramSecondLines: false,
+
+    stream: "undefined stream!", //await navigator.mediaDevices.getUserMedia({ audio: true }),
+
+    audioContext: new (window.AudioContext || window.webkitAudioContext)(),
+    source: "undefined source!", //this.audioContext.createMediaStreamSource(stream),
+
+    analyser: "undefined analyser!", //this.audioContext.createAnalyser(),
+
+    analyserMinDecibels: -96,
+    analyserMaxDecibels: 0,
+    analyserfftSize: 4096,
+    analyserSmoothingTimeConstant: 0,
+
+    bufferLength: "undefined bufferLength!", //this.analyser.frequencyBinCount,
+    dataArray: "undefined Float32Array dataArray!", //new Float32Array(this.bufferLength),
+
+    timeDomainDataArray: "undefined Float32Array timeDomainDataArray!", //new Float32Array(this.bufferLength),
+
+    sourceSmooth: "undefined source!", //this.audioContext.createMediaStreamSource(stream),
+    analyserSmooth: "undefined analyser!", //this.audioContext.createAnalyser(),
+
+    analyserSmoothMinDecibels: -96,
+    analyserSmoothMaxDecibels: 0,
+    analyserSmoothfftSize: 4096,
+    analyserSmoothSmoothingTimeConstant: 0.8, //distinction between the two analysers
+
+    bufferLengthSmooth: "undefined bufferLength!", //this.analyserSmooth.frequencyBinCount,
+    dataArraySmooth: "undefined Float32Array dataArraySmooth!", //new Float32Array(this.bufferLengthSmooth),
+
+    initializeAudio: async function() {
+        if (!data.source) {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            data.stream = stream;
+            data.source = data.audioContext.createMediaStreamSource(stream);
+        }
+
+        data.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        data.source = data.audioContext.createMediaStreamSource(data.stream);
+
+        data.analyser = data.audioContext.createAnalyser();
+
+        data.analyser.minDecibels = data.analyserMinDecibels;
+        data.analyser.maxDecibels = data.analyserMaxDecibels;
+        data.analyser.fftSize = data.analyserfftSize;
+        data.analyser.smoothingTimeConstant = data.analyserSmoothingTimeConstant;
+        data.source.connect(data.analyser);
+
+        data.bufferLength = data.analyser.frequencyBinCount;
+        data.dataArray = new Float32Array(data.bufferLength);
+
+        data.timeDomainDataArray = new Float32Array(data.bufferLength);
+
+        // smooth one
+        data.sourceSmooth = data.audioContext.createMediaStreamSource(data.stream);
+        data.analyserSmooth = data.audioContext.createAnalyser();
+
+        data.analyserSmooth.minDecibels = data.analyserSmoothMinDecibels;
+        data.analyserSmooth.maxDecibels = data.analyserSmoothMaxDecibels;
+        data.analyserSmooth.fftSize = data.analyserSmoothfftSize;
+        data.analyserSmooth.smoothingTimeConstant = data.analyserSmoothSmoothingTimeConstant;
+        data.sourceSmooth.connect(data.analyserSmooth);
+
+        data.bufferLengthSmooth = data.analyserSmooth.frequencyBinCount;
+        data.dataArraySmooth = new Float32Array(data.bufferLengthSmooth);
+    },
+
     amplitudeToColor(amplitude) {
         const normalizedAmplitude = amplitude === -Infinity ? 0 : Math.min(1, Math.max(0, (amplitude + 96) / 96));
         const hue = (1 - normalizedAmplitude * 1.5) * 240;
@@ -22,59 +88,41 @@ const data = {
         }
         const rms = Math.sqrt(sumSquares / timeDomainDataArray.length);
         return 20 * Math.log10(rms);
+    },
+    frequencyToLogScale(frequency) {
+        const minF = Math.log10(20);
+        const maxF = Math.log10(20000);
+        const range = maxF - minF;
+        const yFormula = (frequency) => {
+            return height - (Math.log(frequency) / Math.log(10) - minF) / range * height;
+        }
+        return (Math.log(frequency) / Math.log(10) - minF) / range;
     }
 };
 
-//const formantCanvas = document.getElementById("formantmeter");
-//const formantCtx = formantCanvas.getContext("2d");
-//const vocalWeightCanvas = document.getElementById("vocalweightmeter");
-//const vocalWeightCtx = vocalWeightCanvas.getContext("2d");
 const fullnessCanvas = document.getElementById("fullnessmeter");
 const fullnessCtx = fullnessCanvas.getContext("2d");
 
 navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
+        data.stream = stream;
         console.log('Microphone access granted.');
 
-        data.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        data.source = data.audioContext.createMediaStreamSource(stream);
-        const sourceSmooth = data.audioContext.createMediaStreamSource(stream);
+        // Call initializeAudio after setting data.stream
+        data.initializeAudio().then(() => {
+            // Call startThicknessAnalysis after initializing the audio context and source
+            startThicknessAnalysis();
+            // Initialize the Meyda Analyzer for formant.js after initializing the audio context and source
+            initializeMeydaAnalyzer();
 
-        data.analyser = data.audioContext.createAnalyser();
-        data.analyserSmooth = data.audioContext.createAnalyser();
-
-        data.analyser.minDecibels = -96;
-        data.analyser.maxDecibels = 0;
-        data.analyser.fftSize = 4096;
-        data.analyser.smoothingTimeConstant = 0;
-        data.source.connect(data.analyser);
-
-        data.analyserSmooth.minDecibels = -96;
-        data.analyserSmooth.maxDecibels = 0;
-        data.analyserSmooth.fftSize = 4096;
-        data.analyserSmooth.smoothingTimeConstant = 0.8;
-        sourceSmooth.connect(data.analyserSmooth);
-
-        data.bufferLength = data.analyser.frequencyBinCount;
-        data.dataArray = new Float32Array(data.bufferLength);
-        data.bufferLengthSmooth = data.analyserSmooth.frequencyBinCount;
-        data.dataArraySmooth = new Float32Array(data.bufferLengthSmooth);
-        data.timeDomainDataArray = new Float32Array(data.bufferLength);
-
-        // Call startThicknessAnalysis after initializing the audio context and source
-        startThicknessAnalysis();
-        // Initialize the Meyda Analyzer for formant.js after initializing the audio context and source
-        initializeMeydaAnalyzer();
-
-        
-
-        setInterval(() => {
-            drawSpectrum();
-            updateVolumeMeter();
-            drawSpectrogram();
-            drawThicknessGraph();
-            drawFormants();
-        }, 1000 / 60);
+            setInterval(() => {
+                drawSpectrum();
+                updateVolumeMeter();
+                drawSpectrogram();
+                drawThicknessGraph();
+                drawFormants();
+            }, 1000 / 60);
+        });
     })
     .catch(err => {
         console.error('The following error occurred: ' + err);
