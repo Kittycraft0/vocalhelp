@@ -1,5 +1,36 @@
 // 3/14/2025
 
+// everything gets put into data!!!!!!!!!!!
+data={};
+data.amplitudeToColor=(amplitude)=>{
+    // Normalize amplitude to a 0-1 range, handling -Infinity
+    const normalizedAmplitude = amplitude === -Infinity ? 0 : Math.min(1, Math.max(0, (amplitude + 96) / 96));
+
+    // Map normalized amplitude to hue (blue to red)
+    const hue = (1 - normalizedAmplitude*1.5) * 240;
+
+    // Return the corresponding HSL color
+    return `hsl(${hue}, 100%, 50%)`;
+}
+// Spectrogram
+//let drawOffset = 0; //????????
+/*function data.amplitudeToColor(amplitude) {
+    const value = amplitude / 255; // Normalize amplitude to [0, 1]
+    //const hue = (1 - value) * 240; // Map amplitude to hue (blue to red)
+    const hue = (1 - value*1.5) * 240; // Map amplitude to hue (blue to red)
+    return `hsl(${hue}, 100%, 50%)`;
+}*/
+// https://abarrafato.medium.com/building-a-real-time-spectrum-analyzer-plot-using-html5-canvas-web-audio-api-react-46a495a06cbf
+data.frequencyToXAxis=(frequency)=>{
+    const minF = Math.log(20) / Math.log(10)
+    const maxF = Math.log(20000) / Math.log(10)
+    
+    let range = maxF - minF
+    let xAxis = (Math.log(frequency) / Math.log(10) - minF) / range  
+     * 945
+    return xAxis
+}
+
 var spectrumcanvas=document.getElementById("spectrumvisualization");
 const spectrumctx=spectrumcanvas.getContext("2d");
 var spectrogramcanvas=document.getElementById("spectrogramcanvas");
@@ -95,199 +126,61 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     console.log('Microphone access granted.');
 
     // Create an Audio Context: Initialize an AudioContext, which serves as the main interface to the Web Audio API.
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();//{sampleRate: audioContext.sampleRate});
+    data.audioContext = new (window.AudioContext || window.webkitAudioContext)();//{sampleRate: data.audioContext.sampleRate});
 
     // Create a Media Stream Source: Convert the media stream into a source node that the audio context can process.
-    const source = audioContext.createMediaStreamSource(stream);
-    const sourcesmooth = audioContext.createMediaStreamSource(stream);
+    const source = data.audioContext.createMediaStreamSource(stream);
+    const sourcesmooth = data.audioContext.createMediaStreamSource(stream);
 
     // Create an Analyser Node: Set up an AnalyserNode to extract frequency and amplitude data.
-    const analyser = audioContext.createAnalyser();
-    const analysersmooth = audioContext.createAnalyser();
-    analyser.minDecibels = -96; // Minimum decibel value (default -100)
-    analyser.maxDecibels = 0;     // Maximum decibel value (default -30)
-    analyser.fftSize = 4096; // Determines the frequency resolution
-    analyser.smoothingTimeConstant=0; // (default 0.8)
-    source.connect(analyser);
+    data.analyser = data.audioContext.createAnalyser();
+    data.analyser = data.audioContext.createAnalyser();
+    data.analysersmooth = data.audioContext.createAnalyser();
+    // MAX AND MIN DECIBELS DO NOT AFFECT THE Y-AXIS. THEY AFFECT THE INTENSITY. 
+    // THE FREQUENCIES ARE NOT CHANGED BY SENSITIVITY TO LOUDNESS. DUHHHhhh...
+    data.analyser.minDecibels = -96; // Minimum decibel value (default -100)
+    data.analyser.maxDecibels = 0;     // Maximum decibel value (default -30)
+    data.analyser.fftSize = 4096; // Determines the frequency resolution
+    data.analyser.smoothingTimeConstant=0; // (default 0.8)
+    source.connect(data.analyser);
 
-    analysersmooth.minDecibels = -96; // Minimum decibel value (default -100)
-    analysersmooth.maxDecibels = 0;     // Maximum decibel value (default -30)
-    analysersmooth.fftSize = 4096; // Determines the frequency resolution (default 4096?)
-    analysersmooth.smoothingTimeConstant=0.8; // (default 0.8)
-    console.log("constant: "+analysersmooth.smoothingTimeConstant);
-    sourcesmooth.connect(analysersmooth);
+    data.analysersmooth.minDecibels = -96; // Minimum decibel value (default -100)
+    data.analysersmooth.maxDecibels = 0;     // Maximum decibel value (default -30)
+    data.analysersmooth.fftSize = 4096; // Determines the frequency resolution (default 4096?)
+    data.analysersmooth.smoothingTimeConstant=0.8; // (default 0.8)
+    console.log("constant: "+data.analysersmooth.smoothingTimeConstant);
+    sourcesmooth.connect(data.analysersmooth);
     
     // Extract Frequency Data: Retrieve the frequency data using a Uint8Array.
-    const bufferLength = analyser.frequencyBinCount;
-    //this.setState({bufferLength}) //????????
-    //const dataArray = new Uint8Array(bufferLength);
-    const dataArray = new Float32Array(bufferLength);
-    const bufferLengthsmooth = analysersmooth.frequencyBinCount;
-    //const dataArraysmooth = new Uint8Array(bufferLengthsmooth);
-    const dataArraysmooth = new Float32Array(bufferLengthsmooth);
+    data.bufferLength = data.analyser.frequencyBinCount;
+    //this.setState({data.bufferLength}) //????????
+    //const data.dataArray = new Uint8Array(data.bufferLength);
+    data.dataArray = new Float32Array(data.bufferLength);
+    data.bufferLengthsmooth = data.analysersmooth.frequencyBinCount;
+    //const data.dataArraysmooth = new Uint8Array(data.bufferLengthsmooth);
+    data.dataArraysmooth = new Float32Array(data.bufferLengthsmooth);
 
     function getFrequencyData() {
-        //analyser.getByteFrequencyData(dataArray);
-        analyser.getFloatFrequencyData(dataArray);
-        // dataArray now contains frequency data
+        //data.analyser.getByteFrequencyData(data.dataArray);
+        data.analyser.getFloatFrequencyData(data.dataArray);
+        // data.dataArray now contains frequency data
     }
     // Extract Amplitude (Time-Domain) Data: Obtain the time-domain data to analyze the waveform.
-    //const timeDomainDataArray = new Uint8Array(bufferLength);
-    const timeDomainDataArray = new Float32Array(bufferLength);
+    //const timeDomainDataArray = new Uint8Array(data.bufferLength);
+    const timeDomainDataArray = new Float32Array(data.bufferLength);
 
     function getTimeDomainData() {
-        //analyser.getByteTimeDomainData(timeDomainDataArray);
-        analyser.getFloatTimeDomainData(timeDomainDataArray);
+        //data.analyser.getByteTimeDomainData(timeDomainDataArray);
+        data.analyser.getFloatTimeDomainData(timeDomainDataArray);
         // timeDomainDataArray now contains amplitude data
     }
 
 
-    // Spectrogram
-    //let drawOffset = 0; //????????
-    /*function amplitudeToColor(amplitude) {
-        const value = amplitude / 255; // Normalize amplitude to [0, 1]
-        //const hue = (1 - value) * 240; // Map amplitude to hue (blue to red)
-        const hue = (1 - value*1.5) * 240; // Map amplitude to hue (blue to red)
-        return `hsl(${hue}, 100%, 50%)`;
-    }*/
-    // https://abarrafato.medium.com/building-a-real-time-spectrum-analyzer-plot-using-html5-canvas-web-audio-api-react-46a495a06cbf
-    function frequencyToXAxis(frequency) {
-        const minF = Math.log(20) / Math.log(10)
-        const maxF = Math.log(20000) / Math.log(10)
-        
-        let range = maxF - minF
-        let xAxis = (Math.log(frequency) / Math.log(10) - minF) / range  
-         * 945
-        return xAxis
-    }
-    function amplitudeToColor(amplitude) {
-        // Normalize amplitude to a 0-1 range, handling -Infinity
-        const normalizedAmplitude = amplitude === -Infinity ? 0 : Math.min(1, Math.max(0, (amplitude + 96) / 96));
-
-        // Map normalized amplitude to hue (blue to red)
-        const hue = (1 - normalizedAmplitude*1.5) * 240;
-
-        // Return the corresponding HSL color
-        return `hsl(${hue}, 100%, 50%)`;
-    }
-    // logarithmic, linear, ...
-    let visualtype="logarithmic";
-    spectrogramctx.fillStyle = 'rgb(0, 0, 0)';
-    spectrogramctx.rect(50,50,50,50);
-    spectrogramctx.stroke();
-    spectrogramctx.fillRect(0,0,spectrogramcanvas.width,spectrogramcanvas.height);
-    function drawSpectrogram() {
-        //requestAnimationFrame(drawSpectrogram);
-      
-        //analyser.getByteFrequencyData(dataArray);
-        analyser.getFloatFrequencyData(dataArray);
-        //console.log(dataArray);
-      
-        // Scroll the image left
-        const imageData = spectrogramctx.getImageData(1, 0, spectrogramcanvas.width - 1, spectrogramcanvas.height);
-        spectrogramctx.putImageData(imageData, 0, 0);
-        
-        if(visualtype=="linear"){
-        // Draw the new frequencies on the right edge
-        for (let i = 0; i < bufferLength; i++) {
-            const value = dataArray[i];
-            const percent = i / bufferLength;
-            
-            //finding the frequency from the index
-            let frequency = Math.round(i * audioContext.sampleRate / 2 / bufferLength)
-            //need to convert db Value because it is -120 to 0
-            let barHeight = (value / 2 + 70) * 10
-            //let y = frequencyToXAxis(frequency)
-
-            const y = Math.floor(percent * spectrogramcanvas.height);
-            const color = amplitudeToColor(value);
-            spectrogramctx.fillStyle = color;
-            spectrogramctx.fillRect(spectrogramcanvas.width - 1, spectrogramcanvas.height - y, 1, 1);
-            //console.log("b");
-        }
-        //draw(){
-            //const {audioData} = this.props
-        }else if(visualtype=="logarithmic"){
-            const canvas = spectrogramcanvas;
-            const height = canvas.height
-            const width = canvas.width
-            const context = spectrogramctx;
-            //context.clearRect(0, 0, width, height)
-            audioData=dataArray;
-            
-            //loop to create the bars so I get to 20k!
-            for (let i = 0; i < bufferLength; i++) {
-             /*let value = audioData[i]
-            
-             //finding the frequency from the index
-             let frequency = Math.round(i * audioContext.sampleRate / 2 / bufferLength)
-             //need to convert db Value because it is -120 to 0
-             let barHeight = (value / 2 + 70) * 10
-             let barWidth = width / bufferLength * 2.5
-             context.fillStyle = amplitudeToColor(value)//'rgb(' + (barHeight + 200) + ',100,100)'
-             //finding the x location px from the frequency
-             let x = frequencyToXAxis(frequency)/2.1
-             let h = height - barHeight
-             let barbreadth=frequencyToXAxis(Math.round((i+1) * audioContext.sampleRate / 2 / bufferLength)/2.1-x);
-             if (h > 0) {
-              //context.fillRect(x, h, barWidth, barHeight)
-              //context.fillRect(width-1, height-x, 1, barbreadth)
-                    let b=frequencyToXAxis(Math.round(1 * audioContext.sampleRate / 2 / bufferLength))/2.1
-              context.fillRect(h, height-x+b, 1, -barbreadth)
-             }*/
-            let value = audioData[i]
-            
-            //finding the frequency from the index
-            let frequency = Math.round(i * audioContext.sampleRate / 2 / bufferLength)
-            //need to convert db Value because it is -120 to 0
-            let barHeight = (value / 2 + 70) * 10/5
-            let barWidth = width / bufferLength * 2.5
-            context.fillStyle = amplitudeToColor(value)//'rgb(' + (barHeight + 200) + ',100,100)'
-            //finding the x location px from the frequency
-            let x = frequencyToXAxis(frequency)/2.1
-            let h = width - barHeight //??? had a /2, did i put that there?
-            // bar breadth equals next x position minus current x position!?!?!? what ohh...???? no? what
-            //let barbreadth=frequencyToXAxis(Math.round((i+1) * audioContext.sampleRate / 2 / bufferLength)/2.1-x);
-            let barbreadth=frequencyToXAxis(Math.round((i+1) * audioContext.sampleRate / 2 / bufferLength))/2.1-x;
-            if (h > 0) {
-                //context.fillRect(0, height-x, h/8, barbreadth)
-                let screaming=false;
-                if(screaming){
-                    context.fillRect(h, x, 1, barHeight)
-                }else{
-                    let b=frequencyToXAxis(Math.round(1 * audioContext.sampleRate / 2 / bufferLength))/2.1
-                    // math moment
-                    // it failed :(
-        //let b=(Math.log(Math.round(0*audioContext.sampleRate/2/bufferLength))/Math.log(10)-Math.log(20)/Math.log(10))/(Math.log(20000)/Math.log(10)-Math.log(20)/Math.log(10))*945
-        // cringe log of 0
-        // what
-        //let b=(Math.log(0)/Math.log(10)-Math.log(20)/Math.log(10))/(Math.log(20000)/Math.log(10)-Math.log(20)/Math.log(10))*945
-                    
-                    // yay it worked ok i fixed it nice
-
-                    context.fillRect(width-1, height-x+b, 1, -barbreadth)
-                }
-                //context.fillRect(0,0,10,10);
-                //context.fillRect(h, x, barHeight, 1)
-                //context.fillRect(width-1, height-x, 1, barbreadth)
-                //context.fillRect(width-1, height-x, h, barbreadth)
-            }
-            }
-        }
-          //}
-        //console.log("aaah");
-    }
     
-    // Draw red lines on the spectrogram for testing or idk
-    /*setInterval(()=>{
-        // Scroll the spectrogram left
-        const imageData = spectrogramctx.getImageData(1, 0, spectrogramcanvas.width - 1, spectrogramcanvas.height);
-        spectrogramctx.putImageData(imageData, 0, 0);
-      
-        // Draw red line on the right edge
-        spectrogramctx.fillStyle = `rgb(255,0,0)`;
-        spectrogramctx.fillRect(spectrogramcanvas.width - 1, 0, 1, spectrogramcanvas.height);
-    },1000);*/
+    
+    // logarithmic, linear, ...
+    data.visualtype="logarithmic";
+    spectrogram();
     
 
     /*    function h(){
@@ -301,48 +194,49 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         //requestAnimationFrame(draw);
         
         //getFrequencyData();
-        //analysersmooth.getByteFrequencyData(dataArraysmooth);
-        analysersmooth.getFloatFrequencyData(dataArraysmooth);
+        //data.analysersmooth.getByteFrequencyData(data.dataArraysmooth);
+        data.analysersmooth.getFloatFrequencyData(data.dataArraysmooth);
         
         
         // Spectrum visualization code here
         spectrumctx.fillStyle = 'rgb(0, 0, 0)';
         spectrumctx.fillRect(0,0,spectrumcanvas.width,spectrumcanvas.height);
         //spectrumctx.clearRect(0,0,spectrumcanvas.width,spectrumcanvas.height);
-        let barHeight = (spectrumcanvas.height / bufferLengthsmooth) * 2.5;
+        let barHeight = (spectrumcanvas.height / data.bufferLengthsmooth) * 2.5;
         let barWidth;
         let y = spectrumcanvas.height;
-        for (let i = 0; i < bufferLengthsmooth; i++) {
-            value = dataArraysmooth[i];
+        for (let i = 0; i < data.bufferLengthsmooth; i++) {
+            value = data.dataArraysmooth[i];
             barWidth = value/255*spectrumcanvas.width;
             spectrumctx.fillStyle = 'rgb(' + (value + 100) + ',50,50)';
             // right justified right to left
             //spectrumctx.fillRect(spectrumcanvas.width - barWidth / 2, y, barWidth / 2, barHeight);
             // left justified bottom up
             spectrumctx.fillRect(0, y, barWidth, barHeight);
-            y -= spectrumcanvas.height/bufferLength;
+            y -= spectrumcanvas.height/data.bufferLength;
         }
 
         // Spectrogram visualization code here
     }*/
     function drawSpectrum() {
         // Get the frequency data
-        analysersmooth.getFloatFrequencyData(dataArraysmooth);
-        //analysersmooth.getFloatTimeDomainData(dataArraysmooth);
+        data.analysersmooth.getFloatFrequencyData(data.dataArraysmooth);
+        //data.analysersmooth.getFloatTimeDomainData(data.dataArraysmooth);
         
         // Clear the canvas before drawing
         spectrumctx.fillStyle = 'rgb(0, 0, 0)';
         spectrumctx.fillRect(0, 0, spectrumcanvas.width, spectrumcanvas.height);
     
-        const bufferLength = dataArraysmooth.length;
+        // what why does it need to be reset oh nevermind? or idk? what???
+        data.bufferLength = data.dataArraysmooth.length;
         
-        if(visualtype=="linear"){
-        let barHeight = spectrumcanvas.height / bufferLength;  // Set bar width based on canvas width and number of bars
+        if(data.visualtype=="linear"){
+        let barHeight = spectrumcanvas.height / data.bufferLength;  // Set bar width based on canvas width and number of bars
         let y = spectrumcanvas.height;
     
         // Iterate through the frequency data and draw the bars
-        for (let i = 0; i < bufferLength; i++) {
-            let value = dataArraysmooth[i];
+        for (let i = 0; i < data.bufferLength; i++) {
+            let value = data.dataArraysmooth[i];
     
             // Normalize amplitude to 0-1 (for easier color mapping)
             const normalizedValue = Math.max(0, Math.min(1, (value + 96) / 96));  // Normalize based on the typical -96 dBFS as the lowest value
@@ -352,7 +246,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             let barWidth = (value + 96) * (spectrumcanvas.width / 96);
     
             // Calculate color based on the normalized amplitude
-            const color = amplitudeToColor(value); // Use your existing color function
+            const color = data.amplitudeToColor(value); // Use your existing color function
     
             // Set the color and draw the bar
             spectrumctx.fillStyle = color;
@@ -362,34 +256,34 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             y -= barHeight;
         }
 
-        }else if(visualtype=="logarithmic"){
+        }else if(data.visualtype=="logarithmic"){
         const canvas = spectrumcanvas;
         const height = canvas.height
         const width = canvas.width
         const context = spectrumctx;
         //context.clearRect(0, 0, width, height)
-        audioData=dataArray;
-        audioDatasmooth=dataArraysmooth;
+        audioData=data.dataArray;
+        audioDatasmooth=data.dataArraysmooth;
         
         //loop to create the bars so I get to 20k!
-        for (let i = 0; i < bufferLengthsmooth; i++) {
+        for (let i = 0; i < data.bufferLengthsmooth; i++) {
             let value = audioData[i]
             let valuesmooth = audioDatasmooth[i]
             
             //finding the frequency from the index
-            let frequency = Math.round(i * audioContext.sampleRate / 2 / bufferLength)
+            let frequency = Math.round(i * data.audioContext.sampleRate / 2 / data.bufferLength)
             //need to convert db Value because it is -120 to 0
             let barHeight = (value / 2 + 70) * 10/5
             let barHeightsmooth = (valuesmooth / 2 + 70) * 10/5
-            let barWidth = width / bufferLength * 2.5
-            context.fillStyle = amplitudeToColor(value)//'rgb(' + (barHeight + 200) + ',100,100)'
+            let barWidth = width / data.bufferLength * 2.5
+            context.fillStyle = data.amplitudeToColor(value)//'rgb(' + (barHeight + 200) + ',100,100)'
             //finding the x location px from the frequency
-            let x = frequencyToXAxis(frequency)/2.1
+            let x = data.frequencyToXAxis(frequency)/2.1
             let h = width - barHeight //??? had a /2, did i put that there?
             let hsmooth = width - barHeightsmooth //??? had a /2, did i put that there?
             // bar breadth equals next x position minus current x position!?!?!? what ohh...???? no? what
-            //let barbreadth=frequencyToXAxis(Math.round((i+1) * audioContext.sampleRate / 2 / bufferLength)/2.1-x);
-            let barbreadth=frequencyToXAxis(Math.round((i+1) * audioContext.sampleRate / 2 / bufferLength))/2.1-x;
+            //let barbreadth=data.frequencyToXAxis(Math.round((i+1) * data.audioContext.sampleRate / 2 / data.bufferLength)/2.1-x);
+            let barbreadth=data.frequencyToXAxis(Math.round((i+1) * data.audioContext.sampleRate / 2 / data.bufferLength))/2.1-x;
             if (h > 0) {
                 //context.fillRect(0, height-x, h/8, barbreadth)
                 let screaming=false;
@@ -397,19 +291,19 @@ navigator.mediaDevices.getUserMedia({ audio: true })
                     context.fillRect(h, x, 1, barHeight)
                     //context.fillRect(hsmooth, x, 1, barHeightsmooth)
                 }else{
-                    let b=frequencyToXAxis(Math.round(1 * audioContext.sampleRate / 2 / bufferLength))/2.1
+                    let b=data.frequencyToXAxis(Math.round(1 * data.audioContext.sampleRate / 2 / data.bufferLength))/2.1
                     context.fillRect(0, height-x+b, barHeight, -barbreadth)
                     //context.fillRect(0, height-x+b, barHeightsmooth, -barbreadth)
                     
                 }
 
-                //context.fillStyle = amplitudeToColor(valuesmooth)//'rgb(' + (barHeight + 200) + ',100,100)'
+                //context.fillStyle = data.amplitudeToColor(valuesmooth)//'rgb(' + (barHeight + 200) + ',100,100)'
                 context.fillStyle = 'rgb(0,0,0)'
                 if(screaming){
                     context.fillRect(hsmooth+barHeightsmooth, x, 1, 1)
                     //context.fillRect(h+barHeight, x, 1, 1)
                 }else{
-                    let b=frequencyToXAxis(Math.round(1 * audioContext.sampleRate / 2 / bufferLength))/2.1
+                    let b=data.frequencyToXAxis(Math.round(1 * data.audioContext.sampleRate / 2 / data.bufferLength))/2.1
                     context.fillRect(barHeightsmooth, height-x+b, 1, -barbreadth)
                     //context.fillRect(barHeight, height-x+b, 1, -barbreadth)
                 }
@@ -456,26 +350,26 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         // .
         /*amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
 
-        dataArray.forEach((value, index) => {
+        data.dataArray.forEach((value, index) => {
             const percent = value / 255;
             const height = amplitudecanvas.height * percent;
             const offset = amplitudecanvas.height - height;
-            const barWidth = amplitudecanvas.width / bufferLength;
+            const barWidth = amplitudecanvas.width / data.bufferLength;
             amplitudectx.fillStyle = `rgb(${(1 - percent) * 255}, ${percent * 255}, 0)`;
             amplitudectx.fillRect(index * barWidth, offset, barWidth, height);
         }); //... chatgpt why that's the wrong thing...*
         // .
 
-        //analyser.getByteFrequencyData(dataArray);
-        analyser.getFloatFrequencyData(dataArray);
+        //data.analyser.getByteFrequencyData(data.dataArray);
+        data.analyser.getFloatFrequencyData(data.dataArray);
     
         amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
     
         let sum = 0;
-        dataArray.forEach(value => {
+        data.dataArray.forEach(value => {
             sum += value*value;
         });
-        const rms = Math.sqrt(sum / dataArray.length);
+        const rms = Math.sqrt(sum / data.dataArray.length);
         const dB = Math.log10(rms) * 20;
     
         amplitudectx.fillStyle = 'lime';
@@ -490,14 +384,14 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     }*/
         /*function visualizeVolume() {
             // Retrieve time-domain data
-            analyser.getFloatTimeDomainData(dataArray);
+            data.analyser.getFloatTimeDomainData(data.dataArray);
         
             // Calculate RMS (Root Mean Square)
             let sumSquares = 0;
-            for (let i = 0; i < dataArray.length; i++) {
-                sumSquares += dataArray[i] * dataArray[i];
+            for (let i = 0; i < data.dataArray.length; i++) {
+                sumSquares += data.dataArray[i] * data.dataArray[i];
             }
-            const rms = Math.sqrt(sumSquares / dataArray.length);
+            const rms = Math.sqrt(sumSquares / data.dataArray.length);
         
             // Convert RMS to decibels (dB)
             const dB = 20 * Math.log10(rms);
@@ -517,27 +411,27 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         }*/
             function visualizeVolume() {
                 // Retrieve time-domain data
-                analyser.getFloatTimeDomainData(dataArray);
+                data.analyser.getFloatTimeDomainData(data.dataArray);
             
                 // Calculate RMS (Root Mean Square)
                 let sumSquares = 0;
-                for (let i = 0; i < dataArray.length; i++) {
-                    sumSquares += dataArray[i] * dataArray[i];
+                for (let i = 0; i < data.dataArray.length; i++) {
+                    sumSquares += data.dataArray[i] * data.dataArray[i];
                 }
-                const rms = Math.sqrt(sumSquares / dataArray.length);
+                const rms = Math.sqrt(sumSquares / data.dataArray.length);
                 // Convert RMS to decibels (dB)
                 const dB = 20 * Math.log10(rms);
             
 
                 
                 // Retrieve time-domain data
-                analysersmooth.getFloatTimeDomainData(dataArraysmooth);
+                data.analysersmooth.getFloatTimeDomainData(data.dataArraysmooth);
                 // Calculate RMS (Root Mean Square)
                 let sumSquaressmooth = 0;
-                for (let i = 0; i < dataArraysmooth.length; i++) {
-                    sumSquaressmooth += dataArraysmooth[i] * dataArraysmooth[i];
+                for (let i = 0; i < data.dataArraysmooth.length; i++) {
+                    sumSquaressmooth += data.dataArraysmooth[i] * data.dataArraysmooth[i];
                 }
-                const rmssmooth = Math.sqrt(sumSquaressmooth / dataArraysmooth.length);
+                const rmssmooth = Math.sqrt(sumSquaressmooth / data.dataArraysmooth.length);
                 // Convert RMS to decibels (dB)
                 const dBsmooth = 20 * Math.log10(rmssmooth);
             
@@ -599,8 +493,8 @@ navigator.mediaDevices.getUserMedia({ audio: true })
 
     // Main loop to update the volume visualization
     function updateVolumeMeter() {
-        //analyser.getByteTimeDomainData(timeDomainDataArray);
-        analyser.getFloatTimeDomainData(timeDomainDataArray);
+        //data.analyser.getByteTimeDomainData(timeDomainDataArray);
+        data.analyser.getFloatTimeDomainData(timeDomainDataArray);
         
         visualizeVolume(calculateVolume(timeDomainDataArray));
         //requestAnimationFrame(updateVolumeMeter); // Repeat the process
@@ -653,7 +547,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     }
     
     function processAudioFrame(analyser, sampleRate) {
-        let frequencyData = new Float32Array(analyser.frequencyBinCount);
+        let frequencyData = new Float32Array(data.analyser.frequencyBinCount);
         analyser.getFloatFrequencyData(frequencyData);
         
         let formants = getFormants(frequencyData, sampleRate);
@@ -763,73 +657,73 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     
     
     
-    var thicknessmeter=new ThicknessMeter(audioContext.sampleRate);    
+    var thicknessmeter=new ThicknessMeter(data.audioContext.sampleRate);    
 
     // thanks https://27or27.github.io/tm/thickness_meter.htm for inspiration
-    function updateThicknessMeter(){
-        //let audioData = new Float32Array(analyser.fftSize);
-        //analyser.getFloatTimeDomainData(audioData);
+    function data.data.updateThicknessMeter(){
+        //let audioData = new Float32Array(data.analyser.fftSize);
+        //data.analyser.getFloatTimeDomainData(audioData);
 
-        //let spectrum = new Float32Array(analyser.frequencyBinCount);
-        //analyser.getFloatFrequencyData(spectrum);
+        //let spectrum = new Float32Array(data.analyser.frequencyBinCount);
+        //data.analyser.getFloatFrequencyData(spectrum);
         
         //let signalPower = calculateSignalPower(audioData);
         //let noisePower = estimateNoisePower(spectrum);
         
-        //let peaks = detectFormantPeaks(spectrum, analyser.frequencyBinCount, audioContext.sampleRate);
+        //let peaks = detectFormantPeaks(spectrum, data.analyser.frequencyBinCount, data.audioContext.sampleRate);
 
         //let thicknessScore = thicknessmeter.analyze(audioData, spectrum, peaks, signalPower, noisePower);
         //thicknessmeter.drawMeter(vocalweightcanvas, thicknessScore);
 
 
-        let audioData = new Float32Array(analyser.fftSize);
-        analyser.getFloatTimeDomainData(audioData);
+        let audioData = new Float32Array(data.analyser.fftSize);
+        data.analyser.getFloatTimeDomainData(audioData);
 
-        let spectrum = new Float32Array(analyser.frequencyBinCount);
-        analyser.getFloatFrequencyData(spectrum);
+        let spectrum = new Float32Array(data.analyser.frequencyBinCount);
+        data.analyser.getFloatFrequencyData(spectrum);
 
         let signalPower = calculateSignalPower(audioData);
         let noisePower = estimateNoisePower(spectrum);
-        let peaks = detectFormantPeaks(spectrum, analyser.frequencyBinCount, audioContext.sampleRate);
+        let peaks = detectFormantPeaks(spectrum, data.analyser.frequencyBinCount, data.audioContext.sampleRate);
 
         let thicknessScore = thicknessmeter.analyze(audioData, spectrum, peaks, signalPower, noisePower);
         thicknessmeter.drawMeter(vocalweightcanvas, thicknessScore);
     }*/
 
     // nah i think i'll modify what https://27or27.github.io/tm/thickness_meter.htm has already
-    
+
     
     setInterval(()=>{
         drawSpectrum();
         updateVolumeMeter();
         drawSpectrogram();
-        processAudioFrame(analyser, audioContext.sampleRate);
-        updateThicknessMeter();
+        processAudioFrame(data.analyser, data.audioContext.sampleRate);
+        //data.updateThicknessMeter();
     },1000/60);
     /*requestAnimationFrame(draw);
     console.log("aaa");
 
     console.log(stream);
-    console.log(audioContext);
+    console.log(data.audioContext);
     console.log(source);
-    console.log(analyser);
-    console.log(bufferLength);
-    console.log(dataArray);
+    console.log(data.analyser);
+    console.log(data.bufferLength);
+    console.log(data.dataArray);
     console.log(timeDomainDataArray);
     
     setTimeout(()=>{
         console.log("stream:");
         console.log(stream);
-        console.log("audioContext:");
-        console.log(audioContext);
+        console.log("data.audioContext:");
+        console.log(data.audioContext);
         console.log("source:");
         console.log(source);
-        console.log("analyser:");
-        console.log(analyser);
-        console.log("bufferLength:");
-        console.log(bufferLength);
-        console.log("dataArray:");
-        console.log(dataArray);
+        console.log("data.analyser:");
+        console.log(data.analyser);
+        console.log("data.bufferLength:");
+        console.log(data.bufferLength);
+        console.log("data.dataArray:");
+        console.log(data.dataArray);
         console.log("timeDomainDataArray:");
         console.log(timeDomainDataArray);
     },1000);*/
@@ -838,7 +732,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     
     function componentWillUnmount() {
         cancelAnimationFrame(this.rafId)
-        this.analyser.disconnect()
+        this.data.analyser.disconnect()
         this.source.disconnect()
     }
 })
