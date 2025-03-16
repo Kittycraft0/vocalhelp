@@ -1,5 +1,5 @@
 // 3/16/2025 @ 12:21 AM CST
-var spectrogramcanvas=document.getElementById("spectrogramcanvas");
+var spectrogramcanvas=document.getElementById("spectrogramvisualization");
 const spectrogramctx=spectrogramcanvas.getContext("2d");
 
 spectrogramctx.fillStyle = 'rgb(255, 255, 0)';
@@ -22,19 +22,13 @@ spectrogramctx.fillRect(0,0,spectrogramcanvas.width,spectrogramcanvas.height);
 },1000);*/
 
 function drawSpectrogram() {
-    //console.log(data.dataArray);
-    //requestAnimationFrame(drawSpectrogram);
-  
-    //data.analyser.getByteFrequencyData(data.dataArray);
     data.analyser.getFloatFrequencyData(data.dataArray);
-    //console.log(data.analyser)
-    //console.log(data.dataArray);
-  
+    
     // Scroll the image left
     const imageData = spectrogramctx.getImageData(1, 0, spectrogramcanvas.width - 1, spectrogramcanvas.height);
     spectrogramctx.putImageData(imageData, 0, 0);
     
-    if(data.visualtype=="linear"){
+    if(data.visualType=="linear"){
     // Draw the new frequencies on the right edge
     for (let i = 0; i < data.bufferLength; i++) {
         const value = data.dataArray[i];
@@ -50,38 +44,16 @@ function drawSpectrogram() {
         const color = data.amplitudeToColor(value);
         spectrogramctx.fillStyle = color;
         spectrogramctx.fillRect(spectrogramcanvas.width - 1, spectrogramcanvas.height - y, 1, 1);
-        //console.log("b");
     }
-    //draw(){
-        //const {audioData} = this.props
     }else if(data.visualType=="logarithmic"){
         const canvas = spectrogramcanvas;
         const height = canvas.height
         const width = canvas.width
         const context = spectrogramctx;
-        //context.clearRect(0, 0, width, height)
         audioData=data.dataArray;
         
-        //loop to create the bars so I get to 20k!
+        //loop to create the bars so I get to 20k! (???)
         for (let i = 0; i < data.bufferLength; i++) {
-         /*let value = audioData[i]
-        
-         //finding the frequency from the index
-         let frequency = Math.round(i * data.audioContext.sampleRate / 2 / data.bufferLength)
-         //need to convert db Value because it is -120 to 0
-         let barHeight = (value / 2 + 70) * 10
-         let barWidth = width / data.bufferLength * 2.5
-         context.fillStyle = data.amplitudeToColor(value)//'rgb(' + (barHeight + 200) + ',100,100)'
-         //finding the x location px from the frequency
-         let x = data.frequencyToXAxis(frequency)/2.1
-         let h = height - barHeight
-         let barbreadth=data.frequencyToXAxis(Math.round((i+1) * data.audioContext.sampleRate / 2 / data.bufferLength)/2.1-x);
-         if (h > 0) {
-          //context.fillRect(x, h, barWidth, barHeight)
-          //context.fillRect(width-1, height-x, 1, barbreadth)
-                let b=data.frequencyToXAxis(Math.round(1 * data.audioContext.sampleRate / 2 / data.bufferLength))/2.1
-          context.fillRect(h, height-x+b, 1, -barbreadth)
-         }*/
         let value = audioData[i]
         
         //finding the frequency from the index
