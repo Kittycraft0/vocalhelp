@@ -95,7 +95,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     console.log('Microphone access granted.');
 
     // Create an Audio Context: Initialize an AudioContext, which serves as the main interface to the Web Audio API.
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)({sampleRate: 48000});
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();//{sampleRate: audioContext.sampleRate});
 
     // Create a Media Stream Source: Convert the media stream into a source node that the audio context can process.
     const source = audioContext.createMediaStreamSource(stream);
@@ -194,7 +194,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             const percent = i / bufferLength;
             
             //finding the frequency from the index
-            let frequency = Math.round(i * 48000 / 2 / bufferLength)
+            let frequency = Math.round(i * audioContext.sampleRate / 2 / bufferLength)
             //need to convert db Value because it is -120 to 0
             let barHeight = (value / 2 + 70) * 10
             //let y = frequencyToXAxis(frequency)
@@ -220,7 +220,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
              /*let value = audioData[i]
             
              //finding the frequency from the index
-             let frequency = Math.round(i * 48000 / 2 / bufferLength)
+             let frequency = Math.round(i * audioContext.sampleRate / 2 / bufferLength)
              //need to convert db Value because it is -120 to 0
              let barHeight = (value / 2 + 70) * 10
              let barWidth = width / bufferLength * 2.5
@@ -228,17 +228,17 @@ navigator.mediaDevices.getUserMedia({ audio: true })
              //finding the x location px from the frequency
              let x = frequencyToXAxis(frequency)/2.1
              let h = height - barHeight
-             let barbreadth=frequencyToXAxis(Math.round((i+1) * 48000 / 2 / bufferLength)/2.1-x);
+             let barbreadth=frequencyToXAxis(Math.round((i+1) * audioContext.sampleRate / 2 / bufferLength)/2.1-x);
              if (h > 0) {
               //context.fillRect(x, h, barWidth, barHeight)
               //context.fillRect(width-1, height-x, 1, barbreadth)
-                    let b=frequencyToXAxis(Math.round(1 * 48000 / 2 / bufferLength))/2.1
+                    let b=frequencyToXAxis(Math.round(1 * audioContext.sampleRate / 2 / bufferLength))/2.1
               context.fillRect(h, height-x+b, 1, -barbreadth)
              }*/
             let value = audioData[i]
             
             //finding the frequency from the index
-            let frequency = Math.round(i * 48000 / 2 / bufferLength)
+            let frequency = Math.round(i * audioContext.sampleRate / 2 / bufferLength)
             //need to convert db Value because it is -120 to 0
             let barHeight = (value / 2 + 70) * 10/5
             let barWidth = width / bufferLength * 2.5
@@ -247,18 +247,18 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             let x = frequencyToXAxis(frequency)/2.1
             let h = width - barHeight //??? had a /2, did i put that there?
             // bar breadth equals next x position minus current x position!?!?!? what ohh...???? no? what
-            //let barbreadth=frequencyToXAxis(Math.round((i+1) * 48000 / 2 / bufferLength)/2.1-x);
-            let barbreadth=frequencyToXAxis(Math.round((i+1) * 48000 / 2 / bufferLength))/2.1-x;
+            //let barbreadth=frequencyToXAxis(Math.round((i+1) * audioContext.sampleRate / 2 / bufferLength)/2.1-x);
+            let barbreadth=frequencyToXAxis(Math.round((i+1) * audioContext.sampleRate / 2 / bufferLength))/2.1-x;
             if (h > 0) {
                 //context.fillRect(0, height-x, h/8, barbreadth)
                 let screaming=false;
                 if(screaming){
                     context.fillRect(h, x, 1, barHeight)
                 }else{
-                    let b=frequencyToXAxis(Math.round(1 * 48000 / 2 / bufferLength))/2.1
+                    let b=frequencyToXAxis(Math.round(1 * audioContext.sampleRate / 2 / bufferLength))/2.1
                     // math moment
                     // it failed :(
-        //let b=(Math.log(Math.round(0*48000/2/bufferLength))/Math.log(10)-Math.log(20)/Math.log(10))/(Math.log(20000)/Math.log(10)-Math.log(20)/Math.log(10))*945
+        //let b=(Math.log(Math.round(0*audioContext.sampleRate/2/bufferLength))/Math.log(10)-Math.log(20)/Math.log(10))/(Math.log(20000)/Math.log(10)-Math.log(20)/Math.log(10))*945
         // cringe log of 0
         // what
         //let b=(Math.log(0)/Math.log(10)-Math.log(20)/Math.log(10))/(Math.log(20000)/Math.log(10)-Math.log(20)/Math.log(10))*945
@@ -377,7 +377,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             let valuesmooth = audioDatasmooth[i]
             
             //finding the frequency from the index
-            let frequency = Math.round(i * 48000 / 2 / bufferLength)
+            let frequency = Math.round(i * audioContext.sampleRate / 2 / bufferLength)
             //need to convert db Value because it is -120 to 0
             let barHeight = (value / 2 + 70) * 10/5
             let barHeightsmooth = (valuesmooth / 2 + 70) * 10/5
@@ -388,8 +388,8 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             let h = width - barHeight //??? had a /2, did i put that there?
             let hsmooth = width - barHeightsmooth //??? had a /2, did i put that there?
             // bar breadth equals next x position minus current x position!?!?!? what ohh...???? no? what
-            //let barbreadth=frequencyToXAxis(Math.round((i+1) * 48000 / 2 / bufferLength)/2.1-x);
-            let barbreadth=frequencyToXAxis(Math.round((i+1) * 48000 / 2 / bufferLength))/2.1-x;
+            //let barbreadth=frequencyToXAxis(Math.round((i+1) * audioContext.sampleRate / 2 / bufferLength)/2.1-x);
+            let barbreadth=frequencyToXAxis(Math.round((i+1) * audioContext.sampleRate / 2 / bufferLength))/2.1-x;
             if (h > 0) {
                 //context.fillRect(0, height-x, h/8, barbreadth)
                 let screaming=false;
@@ -397,7 +397,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
                     context.fillRect(h, x, 1, barHeight)
                     //context.fillRect(hsmooth, x, 1, barHeightsmooth)
                 }else{
-                    let b=frequencyToXAxis(Math.round(1 * 48000 / 2 / bufferLength))/2.1
+                    let b=frequencyToXAxis(Math.round(1 * audioContext.sampleRate / 2 / bufferLength))/2.1
                     context.fillRect(0, height-x+b, barHeight, -barbreadth)
                     //context.fillRect(0, height-x+b, barHeightsmooth, -barbreadth)
                     
@@ -409,7 +409,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
                     context.fillRect(hsmooth+barHeightsmooth, x, 1, 1)
                     //context.fillRect(h+barHeight, x, 1, 1)
                 }else{
-                    let b=frequencyToXAxis(Math.round(1 * 48000 / 2 / bufferLength))/2.1
+                    let b=frequencyToXAxis(Math.round(1 * audioContext.sampleRate / 2 / bufferLength))/2.1
                     context.fillRect(barHeightsmooth, height-x+b, 1, -barbreadth)
                     //context.fillRect(barHeight, height-x+b, 1, -barbreadth)
                 }
@@ -606,14 +606,205 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         //requestAnimationFrame(updateVolumeMeter); // Repeat the process
     }
 
+
+
+    // 3/15/2025 11:22PM CST
+    // chatgpt gave me this thing to calculate uhhh formants
+    function getFormants(frequencyData, sampleRate) {
+        let peaks = [];
+        //let threshold = -50; // dB threshold to detect peaks
+        let threshold = -100; // dB threshold to detect peaks
+        
+        for (let i = 1; i < frequencyData.length - 1; i++) {
+            if (
+                frequencyData[i] > frequencyData[i - 1] &&
+                frequencyData[i] > frequencyData[i + 1] &&
+                frequencyData[i] > threshold
+            ) {
+                let frequency = (i * sampleRate) / (2 * frequencyData.length);
+                peaks.push(frequency);
+            }
+        }
+        
+        return peaks;
+    }
+    
+    function calculateFormantDispersion(formants) {
+        if (formants.length < 2) return 0;
+        
+        let sumDispersion = 0;
+        for (let i = 1; i < formants.length; i++) {
+            sumDispersion += formants[i] - formants[i - 1];
+        }
+        
+        return sumDispersion / (formants.length - 1);
+    }
+    
+    function displayFormantDispersion(dispersion) {
+        //let formantCanvas;// = document.getElementById('formantCanvas');
+        //let formantctx;// = canvas.getContext('2d');
+        
+        formantctx.clearRect(0, 0, formantcanvas.width, formantcanvas.height);
+        formantctx.fillStyle = 'black';
+        formantctx.fillRect(0, 0, formantcanvas.width, formantcanvas.height);
+        formantctx.fillStyle = 'white';
+        formantctx.font = '16px Arial';
+        formantctx.fillText(`Formant Dispersion: ${dispersion.toFixed(2)} Hz`, 10, 20);
+    }
+    
+    function processAudioFrame(analyser, sampleRate) {
+        let frequencyData = new Float32Array(analyser.frequencyBinCount);
+        analyser.getFloatFrequencyData(frequencyData);
+        
+        let formants = getFormants(frequencyData, sampleRate);
+        let dispersion = calculateFormantDispersion(formants);
+        displayFormantDispersion(dispersion);
+    }
+    
+    // Call processAudioFrame within an animation loop or setInterval
+    
+
     // Start the volume meter visualization
     //updateVolumeMeter();
 
-      
+    // 3/15/2025
+    // chatgpt moment
+    /*class ThicknessMeter {
+        constructor(sampleRate) {
+            this.sampleRate = sampleRate;
+        }
+    
+        calculateFormantDispersion(peaks) {
+            if (peaks.length < 2) return 0;
+            let sum = 0;
+            for (let i = 1; i < peaks.length; i++) {
+                sum += peaks[i] - peaks[i - 1];
+            }
+            return sum / (peaks.length - 1);
+        }
+    
+        calculateHNR(signal, noise) {
+            if (noise === 0) return 100; // Prevent division by zero
+            return 10 * Math.log10(signal / noise);
+        }
+    
+        calculateSpectralTilt(spectrum) {
+            let lowEnergy = 0, highEnergy = 0, midpoint = spectrum.length / 2;
+            for (let i = 0; i < spectrum.length; i++) {
+                if (i < midpoint) lowEnergy += spectrum[i];
+                else highEnergy += spectrum[i];
+            }
+            return 10 * Math.log10(lowEnergy / (highEnergy || 1)); // Avoid division by zero
+        }
+    
+        calculateEnergyDistribution(spectrum) {
+            let totalEnergy = spectrum.reduce((sum, v) => sum + v, 0);
+            let lowEnergy = spectrum.slice(0, spectrum.length / 2).reduce((sum, v) => sum + v, 0);
+            return lowEnergy / totalEnergy;
+        }
+    
+        analyze(audioData, spectrum, peaks, signalPower, noisePower) {
+            let dispersion = this.calculateFormantDispersion(peaks);
+            let hnr = this.calculateHNR(signalPower, noisePower);
+            let tilt = this.calculateSpectralTilt(spectrum);
+            let energyDist = this.calculateEnergyDistribution(spectrum);
+    
+            let thicknessScore = (1 / (1 + dispersion)) * (hnr / 100) * (1 / (1 + Math.abs(tilt))) * energyDist;
+            return thicknessScore;
+        }
+    
+        drawMeter(canvas, thicknessScore) {
+            const ctx = canvas.getContext("2d");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            let barHeight = thicknessScore * canvas.height;
+            ctx.fillStyle = "hsl(" + (120 - thicknessScore * 120) + ", 100%, 50%)"; // Green to red
+            ctx.fillRect(0, canvas.height - barHeight, canvas.width, barHeight);
+            
+            ctx.fillStyle = "#fff";
+            ctx.font = "20px Arial";
+            ctx.fillText("Thickness: " + thicknessScore.toFixed(2), 10, 30);
+        }
+    }
+
+    function calculateSignalPower(audioData) {
+        let sum = 0;
+        for (let i = 0; i < audioData.length; i++) {
+            sum += audioData[i] * audioData[i];
+        }
+        return sum / audioData.length;
+    }
+    
+    function estimateNoisePower(spectrum) {
+        let noiseSum = 0, count = 0;
+        for (let i = 0; i < spectrum.length; i++) {
+            if (spectrum[i] < -60) { // Assume noise is below -60 dB
+                noiseSum += spectrum[i];
+                count++;
+            }
+        }
+        return count > 0 ? noiseSum / count : -60; // Default noise floor
+    }
+    
+
+    
+    function detectFormantPeaks(spectrum, frequencyBinCount, sampleRate) {
+        let peaks = [];
+        let binSize = sampleRate / (2 * frequencyBinCount); // Frequency per bin
+    
+        for (let i = 1; i < spectrum.length - 1; i++) {
+            if (spectrum[i] > spectrum[i - 1] && spectrum[i] > spectrum[i + 1]) {
+                peaks.push(i * binSize); // Convert index to Hz
+            }
+        }
+        return peaks.slice(0, 4); // Take the first few peaks
+    }
+    
+    
+    
+    
+    var thicknessmeter=new ThicknessMeter(audioContext.sampleRate);    
+
+    // thanks https://27or27.github.io/tm/thickness_meter.htm for inspiration
+    function updateThicknessMeter(){
+        //let audioData = new Float32Array(analyser.fftSize);
+        //analyser.getFloatTimeDomainData(audioData);
+
+        //let spectrum = new Float32Array(analyser.frequencyBinCount);
+        //analyser.getFloatFrequencyData(spectrum);
+        
+        //let signalPower = calculateSignalPower(audioData);
+        //let noisePower = estimateNoisePower(spectrum);
+        
+        //let peaks = detectFormantPeaks(spectrum, analyser.frequencyBinCount, audioContext.sampleRate);
+
+        //let thicknessScore = thicknessmeter.analyze(audioData, spectrum, peaks, signalPower, noisePower);
+        //thicknessmeter.drawMeter(vocalweightcanvas, thicknessScore);
+
+
+        let audioData = new Float32Array(analyser.fftSize);
+        analyser.getFloatTimeDomainData(audioData);
+
+        let spectrum = new Float32Array(analyser.frequencyBinCount);
+        analyser.getFloatFrequencyData(spectrum);
+
+        let signalPower = calculateSignalPower(audioData);
+        let noisePower = estimateNoisePower(spectrum);
+        let peaks = detectFormantPeaks(spectrum, analyser.frequencyBinCount, audioContext.sampleRate);
+
+        let thicknessScore = thicknessmeter.analyze(audioData, spectrum, peaks, signalPower, noisePower);
+        thicknessmeter.drawMeter(vocalweightcanvas, thicknessScore);
+    }*/
+
+    // nah i think i'll modify what https://27or27.github.io/tm/thickness_meter.htm has already
+    
+    
     setInterval(()=>{
         drawSpectrum();
         updateVolumeMeter();
         drawSpectrogram();
+        processAudioFrame(analyser, audioContext.sampleRate);
+        updateThicknessMeter();
     },1000/60);
     /*requestAnimationFrame(draw);
     console.log("aaa");
