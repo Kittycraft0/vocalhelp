@@ -30,13 +30,27 @@ data.frequencyToXAxis=(frequency)=>{
      * 945
     return xAxis
 }
+// Function to calculate volume (rms)
+data.calculateVolume=(timeDomainDataArray)=>{
+    /*let sum = 0;
+    for (let i = 0; i < timeDomainDataArray.length; i++) {
+        sum += timeDomainDataArray[i] * timeDomainDataArray[i]; // Square each sample
+    }
+    //console.log(timeDomainDataArray);
+    let rms = Math.sqrt(sum / timeDomainDataArray.length); // Root mean square (RMS)
+    let volume = Math.max(0, Math.min(1, rms / 128)); // Normalize RMS to a 0-1 range
+    return volume;*/
 
-var spectrumcanvas=document.getElementById("spectrumvisualization");
-const spectrumctx=spectrumcanvas.getContext("2d");
-var specXaxiscanvas=document.getElementById("spectrogramxaxis");
-const specXaxisctx=specXaxiscanvas.getContext("2d");
-var amplitudecanvas=document.getElementById("soundlevelmeter");
-const amplitudectx=amplitudecanvas.getContext("2d");
+    let sumSquares = 0;
+    for (let i = 0; i < timeDomainDataArray.length; i++) {
+        sumSquares += timeDomainDataArray[i] * timeDomainDataArray[i];
+    }
+    const rms = Math.sqrt(sumSquares / timeDomainDataArray.length);
+    const rmsDb = 20 * Math.log10(rms);
+    return rmsDb
+
+}
+
 spectrogramctx.fillStyle = 'rgb(255, 255, 0)';
 spectrogramctx.fillRect(0,0,spectrogramcanvas.width,spectrogramcanvas.height);
 var formantcanvas=document.getElementById("formantmeter");
@@ -46,73 +60,8 @@ const vocalweightectx=vocalweightcanvas.getContext("2d");
 var fullnesscanvas=document.getElementById("fullnessmeter");
 const fullnessectx=fullnesscanvas.getContext("2d");
 
-//specXaxiscanvas.width=spectrogramcanvas.width;
-//specXaxisctx.scale(-1,1);
-//specXaxisctx.translate(-specXaxisCanvas.width/2,0);
-//specXaxisctx.translate(-specXaxiscanvas.width,0);
-//specXaxisctx.fillStyle='rgb(0,0,0)';
-//specXaxisctx.fillRect(-5,-5,specXaxiscanvas.width+10,specXaxiscanvas.height+10);
-//specXaxisctx.fillStyle='rgb(255,0,0)';
-//specXaxisctx.fillRect(-specXaxiscanvas.width/2,-specXaxiscanvas.height/2,specXaxiscanvas.width,specXaxiscanvas.height);
-
-if(false){
-let n=1;
-setInterval(()=>{
-    specXaxisctx.fillStyle=`rgb(0,${n*10},255)`;
-    specXaxisctx.fillRect(n,n,n,n);
-    n+=1;
-},1000/20);
-}
-//specXaxisctx.
 
 
-indicatorcanvas();
-function indicatorcanvas(){
-// making the indicators
-const startX = spectrogramcanvas.width; // Starting x-coordinate
-const interval = 60; // Distance between numbers and indicators
-const numberOfIndicators = Math.floor(specXaxiscanvas.width / interval);
-
-specXaxisctx.font = '16px Arial'; // Set font style
-specXaxisctx.textAlign = 'center'; // Center text horizontally
-//specXaxisctx.textBaseline = 'middle'; // Center text vertically
-specXaxisctx.textBaseline = 'top'; // Center text vertically
-
-
-// do like the funny ruler thing idk
-specXaxisctx.beginPath();
-specXaxisctx.moveTo(0, 0); // Start point of the line
-specXaxisctx.lineTo(spectrogramcanvas.width,0); // End point of the line
-specXaxisctx.stroke();
-
-for(let i=0;i<numberOfIndicators*50;i+=2){
-    const x = startX - i/10 * interval;
-    const y = 10;//specXaxiscanvas.height / 2; // Vertical position of the text
-
-    // Draw the indicator (a vertical line)
-    specXaxisctx.beginPath();
-    specXaxisctx.moveTo(x, y - 10); // Start point of the line
-    specXaxisctx.lineTo(x, y + 10*(i%10==0)); // End point of the line
-    specXaxisctx.stroke();
-}
-for (let i = 0; i <= numberOfIndicators; i++) {
-    const x = startX - i * interval;
-    const y = 10;//specXaxiscanvas.height / 2; // Vertical position of the text
-
-    // Draw the number
-    specXaxisctx.fillText(i, x, y+15);
-
-    // Draw the indicator (a vertical line)
-    specXaxisctx.beginPath();
-    specXaxisctx.moveTo(x, y - 10); // Start point of the line
-    specXaxisctx.lineTo(x, y + 10); // End point of the line
-    specXaxisctx.stroke();
-}
-
-// Draw the axis title
-specXaxisctx.fillText("Time (s)", spectrogramcanvas.width/2, 50);
-
-}
 
 
 
@@ -162,15 +111,17 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         //data.analyser.getByteFrequencyData(data.dataArray);
         data.analyser.getFloatFrequencyData(data.dataArray);
         // data.dataArray now contains frequency data
+        return data.dataArray;
     }
     // Extract Amplitude (Time-Domain) Data: Obtain the time-domain data to analyze the waveform.
-    //const timeDomainDataArray = new Uint8Array(data.bufferLength);
-    const timeDomainDataArray = new Float32Array(data.bufferLength);
+    //const data.timeDomainDataArray = new Uint8Array(data.bufferLength);
+    data.timeDomainDataArray = new Float32Array(data.bufferLength);
 
     function getTimeDomainData() {
-        //data.analyser.getByteTimeDomainData(timeDomainDataArray);
-        data.analyser.getFloatTimeDomainData(timeDomainDataArray);
-        // timeDomainDataArray now contains amplitude data
+        //data.analyser.getByteTimeDomainData(data.timeDomainDataArray);
+        data.analyser.getFloatTimeDomainData(data.timeDomainDataArray);
+        // data.timeDomainDataArray now contains amplitude data
+        return data.timeDomainDataArray;
     }
 
 
@@ -216,125 +167,9 @@ navigator.mediaDevices.getUserMedia({ audio: true })
 
         // Spectrogram visualization code here
     }*/
-    function drawSpectrum() {
-        // Get the frequency data
-        data.analysersmooth.getFloatFrequencyData(data.dataArraysmooth);
-        //data.analysersmooth.getFloatTimeDomainData(data.dataArraysmooth);
-        
-        // Clear the canvas before drawing
-        spectrumctx.fillStyle = 'rgb(0, 0, 0)';
-        spectrumctx.fillRect(0, 0, spectrumcanvas.width, spectrumcanvas.height);
     
-        // what why does it need to be reset oh nevermind? or idk? what???
-        data.bufferLength = data.dataArraysmooth.length;
-        
-        if(data.visualtype=="linear"){
-        let barHeight = spectrumcanvas.height / data.bufferLength;  // Set bar width based on canvas width and number of bars
-        let y = spectrumcanvas.height;
-    
-        // Iterate through the frequency data and draw the bars
-        for (let i = 0; i < data.bufferLength; i++) {
-            let value = data.dataArraysmooth[i];
-    
-            // Normalize amplitude to 0-1 (for easier color mapping)
-            const normalizedValue = Math.max(0, Math.min(1, (value + 96) / 96));  // Normalize based on the typical -96 dBFS as the lowest value
-    
-            // Calculate bar height based on the frequency value (this can be adjusted for desired scaling)
-            //let barHeight = (value + 96) * (spectrumcanvas.height / 96);  // Adjust the height based on value (higher frequency will be taller)
-            let barWidth = (value + 96) * (spectrumcanvas.width / 96);
-    
-            // Calculate color based on the normalized amplitude
-            const color = data.amplitudeToColor(value); // Use your existing color function
-    
-            // Set the color and draw the bar
-            spectrumctx.fillStyle = color;
-            spectrumctx.fillRect(0, y, barWidth, barHeight);
-    
-            // Increment x position for the next bar
-            y -= barHeight;
-        }
 
-        }else if(data.visualtype=="logarithmic"){
-        const canvas = spectrumcanvas;
-        const height = canvas.height
-        const width = canvas.width
-        const context = spectrumctx;
-        //context.clearRect(0, 0, width, height)
-        audioData=data.dataArray;
-        audioDatasmooth=data.dataArraysmooth;
-        
-        //loop to create the bars so I get to 20k!
-        for (let i = 0; i < data.bufferLengthsmooth; i++) {
-            let value = audioData[i]
-            let valuesmooth = audioDatasmooth[i]
-            
-            //finding the frequency from the index
-            let frequency = Math.round(i * data.audioContext.sampleRate / 2 / data.bufferLength)
-            //need to convert db Value because it is -120 to 0
-            let barHeight = (value / 2 + 70) * 10/5
-            let barHeightsmooth = (valuesmooth / 2 + 70) * 10/5
-            let barWidth = width / data.bufferLength * 2.5
-            context.fillStyle = data.amplitudeToColor(value)//'rgb(' + (barHeight + 200) + ',100,100)'
-            //finding the x location px from the frequency
-            let x = data.frequencyToXAxis(frequency)/2.1
-            let h = width - barHeight //??? had a /2, did i put that there?
-            let hsmooth = width - barHeightsmooth //??? had a /2, did i put that there?
-            // bar breadth equals next x position minus current x position!?!?!? what ohh...???? no? what
-            //let barbreadth=data.frequencyToXAxis(Math.round((i+1) * data.audioContext.sampleRate / 2 / data.bufferLength)/2.1-x);
-            let barbreadth=data.frequencyToXAxis(Math.round((i+1) * data.audioContext.sampleRate / 2 / data.bufferLength))/2.1-x;
-            if (h > 0) {
-                //context.fillRect(0, height-x, h/8, barbreadth)
-                let screaming=false;
-                if(screaming){
-                    context.fillRect(h, x, 1, barHeight)
-                    //context.fillRect(hsmooth, x, 1, barHeightsmooth)
-                }else{
-                    let b=data.frequencyToXAxis(Math.round(1 * data.audioContext.sampleRate / 2 / data.bufferLength))/2.1
-                    context.fillRect(0, height-x+b, barHeight, -barbreadth)
-                    //context.fillRect(0, height-x+b, barHeightsmooth, -barbreadth)
-                    
-                }
-
-                //context.fillStyle = data.amplitudeToColor(valuesmooth)//'rgb(' + (barHeight + 200) + ',100,100)'
-                context.fillStyle = 'rgb(0,0,0)'
-                if(screaming){
-                    context.fillRect(hsmooth+barHeightsmooth, x, 1, 1)
-                    //context.fillRect(h+barHeight, x, 1, 1)
-                }else{
-                    let b=data.frequencyToXAxis(Math.round(1 * data.audioContext.sampleRate / 2 / data.bufferLength))/2.1
-                    context.fillRect(barHeightsmooth, height-x+b, 1, -barbreadth)
-                    //context.fillRect(barHeight, height-x+b, 1, -barbreadth)
-                }
-                
-                //context.fillRect(0,0,10,10);
-                //context.fillRect(h, x, barHeight, 1)
-                //context.fillRect(width-1, height-x, 1, barbreadth)
-                //context.fillRect(width-1, height-x, h, barbreadth)
-            }
-        }
-        }
-    }
-
-    // Function to calculate volume (rms)
-    function calculateVolume(timeDomainDataArray) {
-        /*let sum = 0;
-        for (let i = 0; i < timeDomainDataArray.length; i++) {
-            sum += timeDomainDataArray[i] * timeDomainDataArray[i]; // Square each sample
-        }
-        //console.log(timeDomainDataArray);
-        let rms = Math.sqrt(sum / timeDomainDataArray.length); // Root mean square (RMS)
-        let volume = Math.max(0, Math.min(1, rms / 128)); // Normalize RMS to a 0-1 range
-        return volume;*/
-
-        let sumSquares = 0;
-        for (let i = 0; i < timeDomainDataArray.length; i++) {
-            sumSquares += timeDomainDataArray[i] * timeDomainDataArray[i];
-        }
-        const rms = Math.sqrt(sumSquares / timeDomainDataArray.length);
-        const rmsDb = 20 * Math.log10(rms);
-        return rmsDb
-
-    }
+    
 
 
     /*// Function to visualize the volume on the canvas
@@ -407,96 +242,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             // Optionally, request the next animation frame for continuous visualization
             // requestAnimationFrame(visualizeVolume);
         }*/
-            function visualizeVolume() {
-                // Retrieve time-domain data
-                data.analyser.getFloatTimeDomainData(data.dataArray);
-            
-                // Calculate RMS (Root Mean Square)
-                let sumSquares = 0;
-                for (let i = 0; i < data.dataArray.length; i++) {
-                    sumSquares += data.dataArray[i] * data.dataArray[i];
-                }
-                const rms = Math.sqrt(sumSquares / data.dataArray.length);
-                // Convert RMS to decibels (dB)
-                const dB = 20 * Math.log10(rms);
-            
-
-                
-                // Retrieve time-domain data
-                data.analysersmooth.getFloatTimeDomainData(data.dataArraysmooth);
-                // Calculate RMS (Root Mean Square)
-                let sumSquaressmooth = 0;
-                for (let i = 0; i < data.dataArraysmooth.length; i++) {
-                    sumSquaressmooth += data.dataArraysmooth[i] * data.dataArraysmooth[i];
-                }
-                const rmssmooth = Math.sqrt(sumSquaressmooth / data.dataArraysmooth.length);
-                // Convert RMS to decibels (dB)
-                const dBsmooth = 20 * Math.log10(rmssmooth);
-            
-                
-                // Clear the canvas
-                amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
-            
-                // Map dB to canvas height
-                const minDB = -80; // Adjust based on noise floor
-                const maxDB = 0;   // 0 dB is the max reference level
-
-                const barHeight = ((dB - minDB) / (maxDB - minDB)) * (amplitudecanvas.height-50);
-                
-                const barHeightsmooth = ((dBsmooth - minDB) / (maxDB - minDB)) * (amplitudecanvas.height-50);
-                
-                
-                // Draw faded background
-                //-7.8, -20
-                amplitudectx.fillStyle = 'rgb(0,96,0)';
-                amplitudectx.fillRect(50, 25, amplitudecanvas.width-50, 80/80*(amplitudecanvas.height-50));
-                amplitudectx.fillStyle = 'rgb(128,96,0)';
-                amplitudectx.fillRect(50, 25, amplitudecanvas.width-50, 20/80*(amplitudecanvas.height-50));
-                amplitudectx.fillStyle = 'rgb(128,0,0)';
-                amplitudectx.fillRect(50, 25, amplitudecanvas.width-50, 7.8/80*(amplitudecanvas.height-50));
-                
-
-                // Draw the volume bar
-                amplitudectx.fillStyle = 'lime';
-                amplitudectx.fillRect(50, amplitudecanvas.height - barHeight-25, amplitudecanvas.width - 50, barHeight);
-                
-                // Draw the thingy
-                amplitudectx.fillStyle = 'black';
-                amplitudectx.fillRect(50, amplitudecanvas.height - barHeightsmooth-25, amplitudecanvas.width - 50, 5);
-                //console.log(dBsmooth);
-
-                // Draw the axis
-                amplitudectx.strokeStyle = 'black';
-                amplitudectx.lineWidth = 2;
-                amplitudectx.beginPath();
-                amplitudectx.moveTo(50, 25);
-                amplitudectx.lineTo(50, amplitudecanvas.height-25);
-                amplitudectx.stroke();
-            
-                // Draw labels
-                amplitudectx.fillStyle = 'black';
-                amplitudectx.font = '12px Arial';
-                for (let d = minDB; d <= maxDB; d += 20) {
-                    const y = amplitudecanvas.height - ((d - minDB) / (maxDB - minDB)) * (amplitudecanvas.height-50)-25;
-                    amplitudectx.fillText(`${d} dB`, 5, y + 4); // Position labels slightly offset for readability
-                    amplitudectx.beginPath();
-                    amplitudectx.moveTo(45, y);
-                    amplitudectx.lineTo(50, y);
-                    amplitudectx.stroke();
-                }
-            }
-            
-        
     
-
-    // Main loop to update the volume visualization
-    function updateVolumeMeter() {
-        //data.analyser.getByteTimeDomainData(timeDomainDataArray);
-        data.analyser.getFloatTimeDomainData(timeDomainDataArray);
-        
-        visualizeVolume(calculateVolume(timeDomainDataArray));
-        //requestAnimationFrame(updateVolumeMeter); // Repeat the process
-    }
 
 
 
@@ -707,7 +453,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     console.log(data.analyser);
     console.log(data.bufferLength);
     console.log(data.dataArray);
-    console.log(timeDomainDataArray);
+    console.log(data.timeDomainDataArray);
     
     setTimeout(()=>{
         console.log("stream:");
@@ -722,8 +468,8 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         console.log(data.bufferLength);
         console.log("data.dataArray:");
         console.log(data.dataArray);
-        console.log("timeDomainDataArray:");
-        console.log(timeDomainDataArray);
+        console.log("data.timeDomainDataArray:");
+        console.log(data.timeDomainDataArray);
     },1000);*/
       
 
