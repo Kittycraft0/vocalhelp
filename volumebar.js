@@ -19,15 +19,15 @@ function visualizeVolume() {
 
     
     // Retrieve time-domain data
-    data.analysersmooth.getFloatTimeDomainData(data.dataArraysmooth);
+    data.analyserSmooth.getFloatTimeDomainData(data.dataArraySmooth);
     // Calculate RMS (Root Mean Square)
-    let sumSquaressmooth = 0;
-    for (let i = 0; i < data.dataArraysmooth.length; i++) {
-        sumSquaressmooth += data.dataArraysmooth[i] * data.dataArraysmooth[i];
+    let sumSquaresSmooth = 0;
+    for (let i = 0; i < data.dataArraySmooth.length; i++) {
+        sumSquaresSmooth += data.dataArraySmooth[i] * data.dataArraySmooth[i];
     }
-    const rmssmooth = Math.sqrt(sumSquaressmooth / data.dataArraysmooth.length);
+    const rmsSmooth = Math.sqrt(sumSquaresSmooth / data.dataArraySmooth.length);
     // Convert RMS to decibels (dB)
-    const dBsmooth = 20 * Math.log10(rmssmooth);
+    const dBSmooth = 20 * Math.log10(rmsSmooth);
 
     
     // Clear the canvas
@@ -39,7 +39,7 @@ function visualizeVolume() {
 
     const barHeight = ((dB - minDB) / (maxDB - minDB)) * (amplitudecanvas.height-50);
     
-    const barHeightsmooth = ((dBsmooth - minDB) / (maxDB - minDB)) * (amplitudecanvas.height-50);
+    const barHeightSmooth = ((dBSmooth - minDB) / (maxDB - minDB)) * (amplitudecanvas.height-50);
     
     
     // Draw faded background
@@ -58,8 +58,8 @@ function visualizeVolume() {
     
     // Draw the thingy
     amplitudectx.fillStyle = 'black';
-    amplitudectx.fillRect(50, amplitudecanvas.height - barHeightsmooth-25, amplitudecanvas.width - 50, 5);
-    //console.log(dBsmooth);
+    amplitudectx.fillRect(50, amplitudecanvas.height - barHeightSmooth-25, amplitudecanvas.width - 50, 5);
+    //console.log(dBSmooth);
 
     // Draw the axis
     amplitudectx.strokeStyle = 'black';

@@ -54,7 +54,7 @@ function drawSpectrogram() {
     }
     //draw(){
         //const {audioData} = this.props
-    }else if(data.visualtype=="logarithmic"){
+    }else if(data.visualType=="logarithmic"){
         const canvas = spectrogramcanvas;
         const height = canvas.height
         const width = canvas.width
@@ -120,6 +120,8 @@ function drawSpectrogram() {
             //context.fillRect(width-1, height-x, h, barbreadth)
         }
         }
+    }else{
+        console.log("data.visualtype is not a value value!!!");
     }
       //}
     //console.log("aaah");
