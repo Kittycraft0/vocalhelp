@@ -63,10 +63,8 @@ function drawSpectrum() {
             const barHeight = (value / 2 + 70) * 2;
             // y2-y1 magnitude
             const barWidth = Math.abs(y-nexty);
-            //const barWidth = width / data.bufferLength * 2.5;
 
             context.fillStyle = data.amplitudeToColor(value);
-            let b = data.frequencyToXAxis(Math.round(1 * data.audioContext.sampleRate / 2 / data.bufferLength)) / 2.1;
             context.fillRect(0, Math.min(nexty, y), barHeight, barWidth+1);
         }
         for (let i = 0; i < data.bufferLengthSmooth; i++) {

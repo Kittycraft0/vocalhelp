@@ -3,7 +3,7 @@
 const formantCanvas = document.getElementById("formantmeter");
 const formantCtx = formantCanvas.getContext("2d", { willReadFrequently: true });
 
-const formantData = []; // This should be filled with your formant data
+let formantData = []; // This should be filled with your formant data
 const feminineRanges = {
     F1: [200, 800],
     F2: [850, 2500],
@@ -13,6 +13,7 @@ const feminineRanges = {
 };
 
 const colors = ['rgba(255,0,0,0.5)', 'rgba(0,255,0,0.5)', 'rgba(0,0,255,0.5)', 'rgba(255,128,0,0.5)', 'rgba(255,0,128,0.5)'];
+const pointColors = ['rgba(255,0,0,1)', 'rgba(0,255,0,1)', 'rgba(0,0,255,1)', 'rgba(255,128,0,1)', 'rgba(255,0,128,1)'];
 const scrollSpeed = 2; // Adjust scroll speed as needed
 const maxFrequency = 8000; // Maximum frequency to display
 const minFrequency = 20; // Minimum frequency to display
@@ -165,11 +166,11 @@ function updateFormantData(newData) {
         console.warn("No formants detected.");
         return;
     }
-
-    formantData.push(newData);
-    if (formantData.length > MAX_HISTORY) {
-        formantData.shift();
-    }
+    formantData=newData; // Update the formant data with the new data
+    //formantData.push(newData);
+    //if (formantData.length > MAX_HISTORY) {
+    //    formantData.shift();
+    //}
     drawFormants();
 }
 
@@ -184,7 +185,8 @@ function frequencyToColor(freq) {
     return `rgb(${r}, ${g}, ${b})`;
 }
 
-var lastFinalPoint=[];
+var lastFinalPoint = [];
+
 // Optimized scrolling for formant visualization
 function drawFormants() {
     const ctx = formantCanvas.getContext("2d");
@@ -212,41 +214,34 @@ function drawFormants() {
     });
 
     // Example of additional visualization logic    
-    const finalPoint = formantData[formantData.length - 1];
+    const finalPoint = formantData;//formantData[formantData.length - 1];
+    if(!finalPoint){console.log("finalPoint does not exist in this cycle!");}
     if (data.visualType === "linear") {
         // Draw formant data as rectangles on the right-hand side
         for (let i = 0; i < finalPoint.length; i++) {
-            ctx.fillStyle = frequencyToColor(finalPoint[i]);
             const y = formantCanvas.height - (finalPoint[i] / maxFrequency) * formantCanvas.height;
+            ctx.fillStyle = frequencyToColor(finalPoint[i]);
             ctx.fillRect(formantCanvas.width - 1, y, 1, 1); // Draw rectangles with width and height of 1 pixel
         }
     } else if (data.visualType === "logarithmic") {
         // Map frequency to y-coordinate on the canvas using logarithmic scale
         for (let i = 0; i < finalPoint.length; i++) {
             const value = finalPoint[i];
-            const frequency = finalPoint[i];// i * data.audioContext.sampleRate / 2 / data.bufferLength;
-            const nextFrequency = finalPoint[i+1];
-            const yFormula = (frequency) => {
-                return formantCanvas.height - (Math.log(frequency) / Math.log(10) - Math.log(20) / Math.log(10)) / (Math.log(20000) / Math.log(10) - Math.log(20) / Math.log(10)) * formantCanvas.height;
-            }
-            const y = yFormula(frequency);
-            const nexty = yFormula(nextFrequency);
+            const frequency = finalPoint[i];
+            const nextFrequency = finalPoint[i + 1];
+            
+            const y = formantCanvas.height - formantCanvas.height * data.frequencyToLogScale(frequency)*2;
+            //const nexty = formantCanvas.height - formantCanvas.height * data.frequencyToLogScale(nextFrequency);
             const color = data.amplitudeToColor(value);
             formantCtx.fillStyle = color;
-            //console.log(y);
-            //formantCtx.fillRect(formantCanvas.width - 1, Math.min(nexty, y), 1, Math.abs(y - nexty) + 1);
             formantCtx.fillRect(formantCanvas.width - 1, y, 1, 1);
             
-            ctx.fillStyle = frequencyToColor(finalPoint[i]);
-            //const y = formantCanvas.height - (Math.log10(finalPoint[i]) - Math.log10(minFrequency)) / (Math.log10(maxFrequency) - Math.log10(minFrequency)) * formantCanvas.height;
-            //const nexty = yFormula(formantCanvas.height - (Math.log10(finalPoint[i+1]) - Math.log10(minFrequency)) / (Math.log10(maxFrequency) - Math.log10(minFrequency)) * formantCanvas.height);
-            ctx.fillRect(formantCanvas.width - 1, y, 1, 1); // Draw rectangles with width and height of 1 pixel
+            ctx.fillStyle = pointColors[pointColors.length-1-i]; //frequencyToColor(finalPoint[i]);
+            ctx.fillRect(formantCanvas.width - 1, y, 1, 5); // Draw rectangles with width and height of 1 pixel
         }
     }
-    lastFinalPoint=finalPoint;
+    lastFinalPoint = finalPoint;
 }
 
-// Call the function to initialize
-initializeMeydaAnalyzer();
 
 
