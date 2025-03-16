@@ -67,7 +67,6 @@ var drawThicknessGraph = function() {
     }else{
         vocalWeightCtx.fillRect(vocalWeightCanvas.width - 1, y, 1, 1); // Draw the new thickness on the right edge
     }
-    //vocalWeightCtx.fillRect(vocalWeightCanvas.width - 1, y, 1, y-last_y+1); // Draw the new thickness on the right edge
     last_y = y;
 }
 
