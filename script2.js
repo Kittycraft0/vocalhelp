@@ -2,8 +2,8 @@
 
 // everything gets put into data!!!!!!!!!!!
 const data = {
-    //visualType:"logarithmic",
-    amplitudeToColor(amplitude) {
+    visualType:"logarithmic",
+amplitudeToColor(amplitude) {
         const normalizedAmplitude = amplitude === -Infinity ? 0 : Math.min(1, Math.max(0, (amplitude + 96) / 96));
         const hue = (1 - normalizedAmplitude * 1.5) * 240;
         return `hsl(${hue}, 100%, 50%)`;
@@ -26,8 +26,8 @@ const data = {
 
 const formantCanvas = document.getElementById("formantmeter");
 const formantCtx = formantCanvas.getContext("2d");
-const vocalWeightCanvas = document.getElementById("vocalweightmeter");
-const vocalWeightCtx = vocalWeightCanvas.getContext("2d");
+//const vocalWeightCanvas = document.getElementById("vocalweightmeter");
+//const vocalWeightCtx = vocalWeightCanvas.getContext("2d");
 const fullnessCanvas = document.getElementById("fullnessmeter");
 const fullnessCtx = fullnessCanvas.getContext("2d");
 
@@ -36,7 +36,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         console.log('Microphone access granted.');
 
         data.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        const source = data.audioContext.createMediaStreamSource(stream);
+        data.source = data.audioContext.createMediaStreamSource(stream);
         const sourceSmooth = data.audioContext.createMediaStreamSource(stream);
 
         data.analyser = data.audioContext.createAnalyser();
@@ -46,7 +46,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         data.analyser.maxDecibels = 0;
         data.analyser.fftSize = 4096;
         data.analyser.smoothingTimeConstant = 0;
-        source.connect(data.analyser);
+        data.source.connect(data.analyser);
 
         data.analyserSmooth.minDecibels = -96;
         data.analyserSmooth.maxDecibels = 0;
@@ -60,17 +60,8 @@ navigator.mediaDevices.getUserMedia({ audio: true })
         data.dataArraySmooth = new Float32Array(data.bufferLengthSmooth);
         data.timeDomainDataArray = new Float32Array(data.bufferLength);
 
-        function getFrequencyData() {
-            data.analyser.getFloatFrequencyData(data.dataArray);
-            return data.dataArray;
-        }
-
-        function getTimeDomainData() {
-            data.analyser.getFloatTimeDomainData(data.timeDomainDataArray);
-            return data.timeDomainDataArray;
-        }
-
-        data.visualType = "logarithmic";
+        // Call startThicknessAnalysis after initializing the audio context and source
+        startThicknessAnalysis();
 
         function getFormants(frequencyData, sampleRate) {
             const peaks = [];
