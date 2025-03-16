@@ -1,58 +1,59 @@
 // 3/14/2025
 
 // everything gets put into data!!!!!!!!!!!
-data={};
-data.amplitudeToColor=(amplitude)=>{
-    // Normalize amplitude to a 0-1 range, handling -Infinity
-    const normalizedAmplitude = amplitude === -Infinity ? 0 : Math.min(1, Math.max(0, (amplitude + 96) / 96));
-
-    // Map normalized amplitude to hue (blue to red)
-    const hue = (1 - normalizedAmplitude*1.5) * 240;
-
-    // Return the corresponding HSL color
-    return `hsl(${hue}, 100%, 50%)`;
-}
-// Spectrogram
-//let drawOffset = 0; //????????
-/*function data.amplitudeToColor(amplitude) {
-    const value = amplitude / 255; // Normalize amplitude to [0, 1]
-    //const hue = (1 - value) * 240; // Map amplitude to hue (blue to red)
-    const hue = (1 - value*1.5) * 240; // Map amplitude to hue (blue to red)
-    return `hsl(${hue}, 100%, 50%)`;
-}*/
-// https://abarrafato.medium.com/building-a-real-time-spectrum-analyzer-plot-using-html5-canvas-web-audio-api-react-46a495a06cbf
-data.frequencyToXAxis=(frequency)=>{
-    const minF = Math.log(20) / Math.log(10)
-    const maxF = Math.log(20000) / Math.log(10)
+data={
+    amplitudeToColor(amplitude){
+        // Normalize amplitude to a 0-1 range, handling -Infinity
+        const normalizedAmplitude = amplitude === -Infinity ? 0 : Math.min(1, Math.max(0, (amplitude + 96) / 96));
     
-    let range = maxF - minF
-    let xAxis = (Math.log(frequency) / Math.log(10) - minF) / range  
-     * 945
-    return xAxis
-}
-// Function to calculate volume (rms)
-data.calculateVolume=(timeDomainDataArray)=>{
-    /*let sum = 0;
-    for (let i = 0; i < timeDomainDataArray.length; i++) {
-        sum += timeDomainDataArray[i] * timeDomainDataArray[i]; // Square each sample
+        // Map normalized amplitude to hue (blue to red)
+        const hue = (1 - normalizedAmplitude*1.5) * 240;
+    
+        // Return the corresponding HSL color
+        return `hsl(${hue}, 100%, 50%)`;
+    },
+    // Spectrogram
+    //let drawOffset = 0; //????????
+    /*function data.amplitudeToColor(amplitude) {
+        const value = amplitude / 255; // Normalize amplitude to [0, 1]
+        //const hue = (1 - value) * 240; // Map amplitude to hue (blue to red)
+        const hue = (1 - value*1.5) * 240; // Map amplitude to hue (blue to red)
+        return `hsl(${hue}, 100%, 50%)`;
+    }*/
+    // https://abarrafato.medium.com/building-a-real-time-spectrum-analyzer-plot-using-html5-canvas-web-audio-api-react-46a495a06cbf
+    frequencyToXAxis(frequency){
+        const minF = Math.log(20) / Math.log(10)
+        const maxF = Math.log(20000) / Math.log(10)
+        
+        let range = maxF - minF
+        let xAxis = (Math.log(frequency) / Math.log(10) - minF) / range  
+         * 945
+        return xAxis
+    },
+    // Function to calculate volume (rms)
+    calculateVolume(timeDomainDataArray){
+        /*let sum = 0;
+        for (let i = 0; i < timeDomainDataArray.length; i++) {
+            sum += timeDomainDataArray[i] * timeDomainDataArray[i]; // Square each sample
+        }
+        //console.log(timeDomainDataArray);
+        let rms = Math.sqrt(sum / timeDomainDataArray.length); // Root mean square (RMS)
+        let volume = Math.max(0, Math.min(1, rms / 128)); // Normalize RMS to a 0-1 range
+        return volume;*/
+    
+        let sumSquares = 0;
+        for (let i = 0; i < timeDomainDataArray.length; i++) {
+            sumSquares += timeDomainDataArray[i] * timeDomainDataArray[i];
+        }
+        const rms = Math.sqrt(sumSquares / timeDomainDataArray.length);
+        const rmsDb = 20 * Math.log10(rms);
+        return rmsDb
+    
     }
-    //console.log(timeDomainDataArray);
-    let rms = Math.sqrt(sum / timeDomainDataArray.length); // Root mean square (RMS)
-    let volume = Math.max(0, Math.min(1, rms / 128)); // Normalize RMS to a 0-1 range
-    return volume;*/
+};
 
-    let sumSquares = 0;
-    for (let i = 0; i < timeDomainDataArray.length; i++) {
-        sumSquares += timeDomainDataArray[i] * timeDomainDataArray[i];
-    }
-    const rms = Math.sqrt(sumSquares / timeDomainDataArray.length);
-    const rmsDb = 20 * Math.log10(rms);
-    return rmsDb
 
-}
 
-spectrogramctx.fillStyle = 'rgb(255, 255, 0)';
-spectrogramctx.fillRect(0,0,spectrogramcanvas.width,spectrogramcanvas.height);
 var formantcanvas=document.getElementById("formantmeter");
 const formantctx=formantcanvas.getContext("2d");
 var vocalweightcanvas=document.getElementById("vocalweightmeter");
@@ -129,122 +130,8 @@ navigator.mediaDevices.getUserMedia({ audio: true })
     
     // logarithmic, linear, ...
     data.visualtype="logarithmic";
-    spectrogram();
+    //spectrogram();
     
-
-    /*    function h(){
-        return(<div>hello</div>); //what
-    }*/
-    // https://abarrafato.medium.com/building-a-real-time-spectrum-analyzer-plot-using-html5-canvas-web-audio-api-react-46a495a06cbf
-
-
-    // Visualize the Data: Use the extracted data to create visualizations, such as frequency bars or waveforms.
-    /*function drawSpectrum() {
-        //requestAnimationFrame(draw);
-        
-        //getFrequencyData();
-        //data.analysersmooth.getByteFrequencyData(data.dataArraysmooth);
-        data.analysersmooth.getFloatFrequencyData(data.dataArraysmooth);
-        
-        
-        // Spectrum visualization code here
-        spectrumctx.fillStyle = 'rgb(0, 0, 0)';
-        spectrumctx.fillRect(0,0,spectrumcanvas.width,spectrumcanvas.height);
-        //spectrumctx.clearRect(0,0,spectrumcanvas.width,spectrumcanvas.height);
-        let barHeight = (spectrumcanvas.height / data.bufferLengthsmooth) * 2.5;
-        let barWidth;
-        let y = spectrumcanvas.height;
-        for (let i = 0; i < data.bufferLengthsmooth; i++) {
-            value = data.dataArraysmooth[i];
-            barWidth = value/255*spectrumcanvas.width;
-            spectrumctx.fillStyle = 'rgb(' + (value + 100) + ',50,50)';
-            // right justified right to left
-            //spectrumctx.fillRect(spectrumcanvas.width - barWidth / 2, y, barWidth / 2, barHeight);
-            // left justified bottom up
-            spectrumctx.fillRect(0, y, barWidth, barHeight);
-            y -= spectrumcanvas.height/data.bufferLength;
-        }
-
-        // Spectrogram visualization code here
-    }*/
-    
-
-    
-
-
-    /*// Function to visualize the volume on the canvas
-    function visualizeVolume() {
-        // .
-        //amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height); // Clear the previous frame
-        //const barHeight = volume * amplitudecanvas.height; // Map volume to canvas height
-        ////console.log(volume);
-        //amplitudectx.fillStyle = 'rgb(0, 255, 0)'; // Color of the meter
-        //amplitudectx.fillRect(0, amplitudecanvas.height - barHeight, amplitudecanvas.width, barHeight);
-        // .
-        /*amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
-
-        data.dataArray.forEach((value, index) => {
-            const percent = value / 255;
-            const height = amplitudecanvas.height * percent;
-            const offset = amplitudecanvas.height - height;
-            const barWidth = amplitudecanvas.width / data.bufferLength;
-            amplitudectx.fillStyle = `rgb(${(1 - percent) * 255}, ${percent * 255}, 0)`;
-            amplitudectx.fillRect(index * barWidth, offset, barWidth, height);
-        }); //... chatgpt why that's the wrong thing...*
-        // .
-
-        //data.analyser.getByteFrequencyData(data.dataArray);
-        data.analyser.getFloatFrequencyData(data.dataArray);
-    
-        amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
-    
-        let sum = 0;
-        data.dataArray.forEach(value => {
-            sum += value*value;
-        });
-        const rms = Math.sqrt(sum / data.dataArray.length);
-        const dB = Math.log10(rms) * 20;
-    
-        amplitudectx.fillStyle = 'lime';
-        amplitudectx.fillRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
-        //console.log(dB);
-        amplitudectx.fillStyle = 'red';
-        amplitudectx.fillRect(0, 0, amplitudecanvas.width, dB / 60 * amplitudecanvas.height);
-        amplitudectx;
-        //requestAnimationFrame(draw);
-
-
-    }*/
-        /*function visualizeVolume() {
-            // Retrieve time-domain data
-            data.analyser.getFloatTimeDomainData(data.dataArray);
-        
-            // Calculate RMS (Root Mean Square)
-            let sumSquares = 0;
-            for (let i = 0; i < data.dataArray.length; i++) {
-                sumSquares += data.dataArray[i] * data.dataArray[i];
-            }
-            const rms = Math.sqrt(sumSquares / data.dataArray.length);
-        
-            // Convert RMS to decibels (dB)
-            const dB = 20 * Math.log10(rms);
-        
-            // Clear the canvas
-            amplitudectx.clearRect(0, 0, amplitudecanvas.width, amplitudecanvas.height);
-        
-            // Map dB to canvas height
-            const barHeight = ((dB + 100) / 100) * amplitudecanvas.height; // Adjusting dB range for visualization
-        
-            // Draw the volume bar
-            amplitudectx.fillStyle = 'lime';
-            amplitudectx.fillRect(0, amplitudecanvas.height - barHeight, amplitudecanvas.width, barHeight);
-        
-            // Optionally, request the next animation frame for continuous visualization
-            // requestAnimationFrame(visualizeVolume);
-        }*/
-    
-
-
 
     // 3/15/2025 11:22PM CST
     // chatgpt gave me this thing to calculate uhhh formants

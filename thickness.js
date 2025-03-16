@@ -7,83 +7,84 @@ var BUFFER_SIZE = 256;
 var SAMPLE_RATE = 44100;
 var MAX_THICKNESS_BUFFER_SIZE = Math.round(30*60*SAMPLE_RATE/BUFFER_SIZE); // 30 minutes worth of results
 
-var color_str_to_rgb = function (str)
-{
-    var ctx = document.createElement("canvas").getContext("2d");
-    ctx.fillStyle = str;
-    return [parseInt(ctx.fillStyle.slice(1,3), 16),
-            parseInt(ctx.fillStyle.slice(3,5), 16),
-            parseInt(ctx.fillStyle.slice(5), 16)];
-};
+//var color_str_to_rgb = function (str)
+//{
+//    var ctx = document.createElement("canvas").getContext("2d");
+//    ctx.fillStyle = str;
+//    return [parseInt(ctx.fillStyle.slice(1,3), 16),
+//            parseInt(ctx.fillStyle.slice(3,5), 16),
+//            parseInt(ctx.fillStyle.slice(5), 16)];
+//};
 
-var tts_say = function(msg)
-{
-  var u = new SpeechSynthesisUtterance(msg);
-  u.onend = function(){ window.tts_speaking = false; }
-  u.onerror = u.onend;
-  window.tts_speaking = true;
-  speechSynthesis.speak(u);
-}
+//var tts_say = function(msg)
+//{
+//  var u = new SpeechSynthesisUtterance(msg);
+//  u.onend = function(){ window.tts_speaking = false; }
+//  u.onerror = u.onend;
+//  window.tts_speaking = true;
+//  speechSynthesis.speak(u);
+//}
 
-var tts_say_buffer_out_loud_if_speech_present = function(buffer, clear_buffer)
-{
-  if (window.recorder || window.running_state == 'RECORDING')
-  {
-    return;
-  }
+//var tts_say_buffer_out_loud_if_speech_present = function(buffer, clear_buffer)
+//{
+//  if (window.recorder || window.running_state == 'RECORDING')
+//  {
+//    return;
+//  }
+//
+//  var thin_count = 0, thick_count = 0, unvoiced_count = 0;
+//  for (var i=thickness_buffer.length-1; i>0; --i)
+//  {
+//    if (thickness_buffer[i] >= SecondColorChangeThreshold)
+//    {
+//      ++unvoiced_count;
+//    }
+//    else if (thickness_buffer[i] >= FirstColorChangeThreshold)
+//    {
+//      ++thick_count;
+//    }
+//    else
+//    {
+//      ++thin_count;
+//    }
+//  }
+//
+//  if ((thick_count+unvoiced_count) > 0)
+//  {
+//    var total = thickness_buffer.length;
+//    tts_say((Math.round(((100*thin_count/total) + Number.EPSILON) * 100) / 100) + '% thin, ' +
+//        (Math.round(((100*thick_count/total) + Number.EPSILON) * 100) / 100) + '% thick, ' +
+//        (Math.round(((100*unvoiced_count/total) + Number.EPSILON) * 100) / 100) + '% unvoiced');
+//    if (clear_buffer)
+//    {
+//      window.thickness_buffer = [];
+//    }
+//  }
+//}
 
-  var thin_count = 0, thick_count = 0, unvoiced_count = 0;
-  for (var i=thickness_buffer.length-1; i>0; --i)
-  {
-    if (thickness_buffer[i] >= SecondColorChangeThreshold)
-    {
-      ++unvoiced_count;
-    }
-    else if (thickness_buffer[i] >= FirstColorChangeThreshold)
-    {
-      ++thick_count;
-    }
-    else
-    {
-      ++thin_count;
-    }
-  }
+//var on_thickness_calculated_for_buffer = function(thickness)
+//{
+//  if (!window.tts_speaking)
+//  {
+//    window.thickness_buffer.push(thickness);
+//  }
+//
+//  var thickness_buffer = window.thickness_buffer;
+//  if (thickness_buffer.length > MAX_THICKNESS_BUFFER_SIZE)
+//  {
+//    thickness_buffer.splice(0, thickness_buffer.length-MAX_THICKNESS_BUFFER_SIZE);
+//  }
+//
+//  if (SayResultsOutLoud && (thickness == 0))
+//  {
+//    if (thickness_buffer.slice(-Math.round(SecondsToWaitBeforeSayingResults*SAMPLE_RATE/BUFFER_SIZE)).every((i) => i==0))
+//    {
+//      tts_say_buffer_out_loud_if_speech_present(thickness_buffer, true);
+//    }
+//  }
+//}
 
-  if ((thick_count+unvoiced_count) > 0)
-  {
-    var total = thickness_buffer.length;
-    tts_say((Math.round(((100*thin_count/total) + Number.EPSILON) * 100) / 100) + '% thin, ' +
-        (Math.round(((100*thick_count/total) + Number.EPSILON) * 100) / 100) + '% thick, ' +
-        (Math.round(((100*unvoiced_count/total) + Number.EPSILON) * 100) / 100) + '% unvoiced');
-    if (clear_buffer)
-    {
-      window.thickness_buffer = [];
-    }
-  }
-}
-
-var on_thickness_calculated_for_buffer = function(thickness)
-{
-  if (!window.tts_speaking)
-  {
-    window.thickness_buffer.push(thickness);
-  }
-
-  var thickness_buffer = window.thickness_buffer;
-  if (thickness_buffer.length > MAX_THICKNESS_BUFFER_SIZE)
-  {
-    thickness_buffer.splice(0, thickness_buffer.length-MAX_THICKNESS_BUFFER_SIZE);
-  }
-
-  if (SayResultsOutLoud && (thickness == 0))
-  {
-    if (thickness_buffer.slice(-Math.round(SecondsToWaitBeforeSayingResults*SAMPLE_RATE/BUFFER_SIZE)).every((i) => i==0))
-    {
-      tts_say_buffer_out_loud_if_speech_present(thickness_buffer, true);
-    }
-  }
-}
-
+// might use idk
 var compatible_getUserMedia = function(opt, done, error)
 {
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia){ return navigator.mediaDevices.getUserMedia(opt).then(done).catch(error); }
@@ -93,6 +94,7 @@ var compatible_getUserMedia = function(opt, done, error)
   alert("This app can't access your microphone due to your browser not supporting getUserMedia. If possible, update your browser or try a different browser.");
 }
 
+// might use idk
 var get_microphone_stream = function(callback)
 {
   compatible_getUserMedia({video:false,audio:true}, callback, function(err)
@@ -101,6 +103,7 @@ var get_microphone_stream = function(callback)
   });
 }
 
+// this
 var analyze_and_graph = function(ctx, source)
 {
   window.audio_ctx = ctx;
