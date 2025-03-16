@@ -3,7 +3,8 @@
 // everything gets put into data!!!!!!!!!!!
 const data = {
     visualType:"logarithmic",
-amplitudeToColor(amplitude) {
+    drawSpectrogramSecondLines:false,
+    amplitudeToColor(amplitude) {
         const normalizedAmplitude = amplitude === -Infinity ? 0 : Math.min(1, Math.max(0, (amplitude + 96) / 96));
         const hue = (1 - normalizedAmplitude * 1.5) * 240;
         return `hsl(${hue}, 100%, 50%)`;
@@ -24,8 +25,8 @@ amplitudeToColor(amplitude) {
     }
 };
 
-const formantCanvas = document.getElementById("formantmeter");
-const formantCtx = formantCanvas.getContext("2d");
+//const formantCanvas = document.getElementById("formantmeter");
+//const formantCtx = formantCanvas.getContext("2d");
 //const vocalWeightCanvas = document.getElementById("vocalweightmeter");
 //const vocalWeightCtx = vocalWeightCanvas.getContext("2d");
 const fullnessCanvas = document.getElementById("fullnessmeter");
@@ -62,63 +63,18 @@ navigator.mediaDevices.getUserMedia({ audio: true })
 
         // Call startThicknessAnalysis after initializing the audio context and source
         startThicknessAnalysis();
+        // Initialize the Meyda Analyzer for formant.js after initializing the audio context and source
+        initializeMeydaAnalyzer();
 
-        function getFormants(frequencyData, sampleRate) {
-            const peaks = [];
-            const threshold = -100;
-
-            for (let i = 1; i < frequencyData.length - 1; i++) {
-                if (frequencyData[i] > frequencyData[i - 1] && frequencyData[i] > frequencyData[i + 1] && frequencyData[i] > threshold) {
-                    const frequency = (i * sampleRate) / (2 * frequencyData.length);
-                    peaks.push(frequency);
-                }
-            }
-
-            return peaks;
-        }
-
-        function calculateFormantDispersion(formants) {
-            if (formants.length < 2) return 0;
-
-            let sumDispersion = 0;
-            for (let i = 1; i < formants.length; i++) {
-                sumDispersion += formants[i] - formants[i - 1];
-            }
-
-            return sumDispersion / (formants.length - 1);
-        }
-
-        function displayFormantDispersion(dispersion) {
-            formantCtx.clearRect(0, 0, formantCanvas.width, formantCanvas.height);
-            formantCtx.fillStyle = 'black';
-            formantCtx.fillRect(0, 0, formantCanvas.width, formantCanvas.height);
-            formantCtx.fillStyle = 'white';
-            formantCtx.font = '16px Arial';
-            formantCtx.fillText(`Formant Dispersion: ${dispersion.toFixed(2)} Hz`, 10, 20);
-        }
-
-        function processAudioFrame(analyser, sampleRate) {
-            const frequencyData = new Float32Array(data.analyser.frequencyBinCount);
-            analyser.getFloatFrequencyData(frequencyData);
-
-            const formants = getFormants(frequencyData, sampleRate);
-            const dispersion = calculateFormantDispersion(formants);
-            displayFormantDispersion(dispersion);
-        }
+        
 
         setInterval(() => {
             drawSpectrum();
             updateVolumeMeter();
             drawSpectrogram();
-            processAudioFrame(data.analyser, data.audioContext.sampleRate);
             drawThicknessGraph();
+            drawFormants();
         }, 1000 / 60);
-
-        function componentWillUnmount() {
-            cancelAnimationFrame(this.rafId);
-            this.data.analyser.disconnect();
-            this.source.disconnect();
-        }
     })
     .catch(err => {
         console.error('The following error occurred: ' + err);

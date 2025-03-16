@@ -1,26 +1,34 @@
 <!--3/14/2025, pi day!?-->
-<!DOCTYPE HTML>
-<html>
+<!DOCTYPE html>
+<html lang="en">
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Voice help tools</title>
         <script src="https://cdn.jsdelivr.net/npm/meyda/dist/web/meyda.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.3.1/math.js"></script>
     </head>
     <body>
         <table>
-            <tr><td style="vertical-align:top">
-                <canvas id="soundlevelmeter" width="64" height="640" ></canvas>
-            </td>
-            <td>
-                <canvas id="spectrogramvisualization" width="512" height="512" ></canvas>
-                <canvas id="spectrumvisualization" width="128" height="512" ></canvas>
-                <canvas id="formantmeter" width="512" height="512" ></canvas>
-                <br />
-                <canvas id="vocalweightmeter" width="512" height="128" ></canvas>
-                <br />
-                <canvas id="fullnessmeter" width="512" height="128" ></canvas>
-                <br />
-                <canvas id="spectrogramxaxis" width="630" height="70"></canvas>
-                
-            </td></tr>
+            <tr>
+                <td style="vertical-align:top">
+                    <canvas id="soundlevelmeter" width="64" height="640"></canvas>
+                </td>
+                <td style="vertical-align:top">
+                    <canvas id="yaxislabels" width="64" height="512"></canvas>
+                </td>
+                <td>
+                    <canvas id="spectrogramvisualization" width="512" height="512"></canvas>
+                    <canvas id="spectrumvisualization" width="128" height="512"></canvas>
+                    <canvas id="formantmeter" width="512" height="512"></canvas>
+                    <br />
+                    <canvas id="vocalweightmeter" width="512" height="128"></canvas>
+                    <br />
+                    <canvas id="fullnessmeter" width="512" height="128"></canvas>
+                    <br />
+                    <canvas id="spectrogramxaxis" width="630" height="70"></canvas>
+                </td>
+            </tr>
         </table>
         <script src="volumebar.js"></script>
         <script src="spectrum.js"></script>
@@ -29,5 +37,6 @@
         <script src="script2.js"></script>
         <script src="vocalweight.js"></script>
         <script src="formant.js"></script>
+        <script src="yaxislabels.js"></script>
     </body>
 </html>

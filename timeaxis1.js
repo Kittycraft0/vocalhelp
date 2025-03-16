@@ -1,5 +1,5 @@
-var specXaxiscanvas=document.getElementById("spectrogramxaxis");
-const specXaxisctx=specXaxiscanvas.getContext("2d");
+var specXaxisCanvas=document.getElementById("spectrogramxaxis");
+const specXaxisctx=specXaxisCanvas.getContext("2d");
 
 //specXaxiscanvas.width=spectrogramcanvas.width;
 //specXaxisctx.scale(-1,1);
@@ -23,9 +23,9 @@ if(false){
 indicatorcanvas();
 function indicatorcanvas(){
 // making the indicators
-const startX = spectrogramcanvas.width; // Starting x-coordinate
+const startX = spectrogramCanvas.width; // Starting x-coordinate
 const interval = 60; // Distance between numbers and indicators
-const numberOfIndicators = Math.floor(specXaxiscanvas.width / interval);
+const numberOfIndicators = Math.floor(specXaxisCanvas.width / interval);
 
 specXaxisctx.font = '16px Arial'; // Set font style
 specXaxisctx.textAlign = 'center'; // Center text horizontally
@@ -36,7 +36,7 @@ specXaxisctx.textBaseline = 'top'; // Center text vertically
 // do like the funny ruler thing idk
 specXaxisctx.beginPath();
 specXaxisctx.moveTo(0, 0); // Start point of the line
-specXaxisctx.lineTo(spectrogramcanvas.width,0); // End point of the line
+specXaxisctx.lineTo(spectrogramCanvas.width,0); // End point of the line
 specXaxisctx.stroke();
 
 for(let i=0;i<numberOfIndicators*50;i+=2){
@@ -64,6 +64,6 @@ for (let i = 0; i <= numberOfIndicators; i++) {
 }
 
 // Draw the axis title
-specXaxisctx.fillText("Time (s)", spectrogramcanvas.width/2, 50);
+specXaxisctx.fillText("Time (s)", spectrogramCanvas.width/2, 50);
 
 }

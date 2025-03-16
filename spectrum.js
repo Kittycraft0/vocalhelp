@@ -47,9 +47,9 @@ function drawSpectrum() {
 
             if (h > 0) {
                 let b = data.frequencyToXAxis(Math.round(1 * data.audioContext.sampleRate / 2 / data.bufferLength)) / 2.1;
-                context.fillRect(0, height - x + b, barHeight, -barbreadth);
-                context.fillStyle = 'rgb(0,0,0)';
-                context.fillRect(barHeightSmooth, height - x + b, 1, -barbreadth);
+                context.fillRect(0, height - x + b, barHeight, -barbreadth-1);
+                context.fillStyle = 'rgb(255,0,0)';
+                context.fillRect(barHeightSmooth, height - x + b, 1, -barbreadth-1);
             }
         }
     } else {
