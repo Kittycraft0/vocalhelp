@@ -111,6 +111,7 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             updateVolumeMeter();
             drawSpectrogram();
             processAudioFrame(data.analyser, data.audioContext.sampleRate);
+            drawThicknessGraph();
         }, 1000 / 60);
 
         function componentWillUnmount() {

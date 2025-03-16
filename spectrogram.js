@@ -10,7 +10,7 @@ spectrogramctx.rect(50,50,50,50);
 spectrogramctx.stroke();
 spectrogramctx.fillRect(0,0,spectrogramcanvas.width,spectrogramcanvas.height);
 
-// Draw red lines on the spectrogram for testing or idk
+// Draw red lines on the spectrogram, code present for reference and use
 /*setInterval(()=>{
     // Scroll the spectrogram left
     const imageData = spectrogramctx.getImageData(1, 0, spectrogramcanvas.width - 1, spectrogramcanvas.height);
@@ -22,6 +22,7 @@ spectrogramctx.fillRect(0,0,spectrogramcanvas.width,spectrogramcanvas.height);
 },1000);*/
 
 function drawSpectrogram() {
+// Get the frequency data
     data.analyser.getFloatFrequencyData(data.dataArray);
     
     // Scroll the image left
