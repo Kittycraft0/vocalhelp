@@ -229,7 +229,7 @@ function drawFormants() {
             const yFormula = (frequency) => {
                 return formantCanvas.height - (Math.log(frequency) / Math.log(10) - Math.log(20) / Math.log(10)) / (Math.log(20000) / Math.log(10) - Math.log(20) / Math.log(10)) * formantCanvas.height;
             }
-            //const y = yFormula(frequency);
+            const y = yFormula(frequency);
             const nexty = yFormula(nextFrequency);
             const color = data.amplitudeToColor(value);
             formantCtx.fillStyle = color;
@@ -238,7 +238,7 @@ function drawFormants() {
             formantCtx.fillRect(formantCanvas.width - 1, y, 1, 1);
             
             ctx.fillStyle = frequencyToColor(finalPoint[i]);
-            const y = formantCanvas.height - (Math.log10(finalPoint[i]) - Math.log10(minFrequency)) / (Math.log10(maxFrequency) - Math.log10(minFrequency)) * formantCanvas.height;
+            //const y = formantCanvas.height - (Math.log10(finalPoint[i]) - Math.log10(minFrequency)) / (Math.log10(maxFrequency) - Math.log10(minFrequency)) * formantCanvas.height;
             //const nexty = yFormula(formantCanvas.height - (Math.log10(finalPoint[i+1]) - Math.log10(minFrequency)) / (Math.log10(maxFrequency) - Math.log10(minFrequency)) * formantCanvas.height);
             ctx.fillRect(formantCanvas.width - 1, y, 1, 1); // Draw rectangles with width and height of 1 pixel
         }

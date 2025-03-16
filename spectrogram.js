@@ -36,13 +36,15 @@ function drawSpectrogram() {
     const height = spectrogramCanvas.height;
 
     if (data.visualType === "linear") {
+        let barHeight = spectrogramCanvas.height / data.bufferLength;
+        // Draw spectrogram data as rectangles on the right-hand side
         for (let i = 0; i < data.bufferLength; i++) {
             const value = data.dataArray[i];
             const percent = i / data.bufferLength;
             const y = Math.floor(percent * height);
             const color = data.amplitudeToColor(value);
             spectrogramCtx.fillStyle = color;
-            spectrogramCtx.fillRect(spectrogramCanvas.width - 1, height - y - 1, 1, 1);
+            spectrogramCtx.fillRect(spectrogramCanvas.width - 1, spectrogramCanvas.height - y - 1, 1, barHeight);
         }
     } else if (data.visualType === "logarithmic") {
         // Map frequency to y-coordinate on the canvas using logarithmic scale
@@ -50,15 +52,15 @@ function drawSpectrogram() {
             const value = data.dataArray[i];
             const frequency = i * data.audioContext.sampleRate / 2 / data.bufferLength;
             const nextFrequency = (i + 1) * data.audioContext.sampleRate / 2 / data.bufferLength;
-            const yFormula = (frequency) => {
-                return height - (Math.log(frequency) / Math.log(10) - Math.log(20) / Math.log(10)) / (Math.log(20000) / Math.log(10) - Math.log(20) / Math.log(10)) * height;
-            }
-            const y = yFormula(frequency);
-            const nexty = yFormula(nextFrequency);
+            const y = height-height*data.frequencyToLogScale(frequency);
+            const nexty = height-height*data.frequencyToLogScale(nextFrequency);
+            const barWidth=y-nexty;
             const color = data.amplitudeToColor(value);
             spectrogramCtx.fillStyle = color;
-            spectrogramCtx.fillRect(spectrogramCanvas.width - 1, Math.min(nexty, y), 1, Math.abs(y - nexty)+1);
+            spectrogramCtx.fillRect(spectrogramCanvas.width - 1, Math.min(nexty, y), 1, barWidth+1);
         }
+    } else {
+        console.error("data.visualType is not a valid value!");
     }
 }
 // drawSpectrogram(); is already called in script2.js along with all the other draw functions, 

@@ -2,6 +2,7 @@
 
 // everything gets put into data!!!!!!!!!!!
 const data = {
+    // options: linear, logarithmic
     visualType: "logarithmic",
     drawSpectrogramSecondLines: false,
 
