@@ -33,8 +33,6 @@ data.frequencyToXAxis=(frequency)=>{
 
 var spectrumcanvas=document.getElementById("spectrumvisualization");
 const spectrumctx=spectrumcanvas.getContext("2d");
-var spectrogramcanvas=document.getElementById("spectrogramcanvas");
-const spectrogramctx=spectrogramcanvas.getContext("2d");
 var specXaxiscanvas=document.getElementById("spectrogramxaxis");
 const specXaxisctx=specXaxiscanvas.getContext("2d");
 var amplitudecanvas=document.getElementById("soundlevelmeter");

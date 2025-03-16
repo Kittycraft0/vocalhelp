@@ -1,3 +1,6 @@
+// 3/16/2025 @ 12:21 AM CST
+var spectrogramcanvas=document.getElementById("spectrogramcanvas");
+const spectrogramctx=spectrogramcanvas.getContext("2d");
 function spectrogram(){
     spectrogramctx.fillStyle = 'rgb(0, 0, 0)';
     spectrogramctx.rect(50,50,50,50);
