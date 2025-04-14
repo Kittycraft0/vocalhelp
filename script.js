@@ -624,7 +624,7 @@ function drawFormantGuide() {
                         const percent = peak.amp / 255;
                         const hue = 240 - percent * 240; // Blue->Red
                         const lightness = 15 + percent * 50; // Dim->Bright
-                        peakColor = `hsl(${hue}, 100%, ${lightness}%)`;
+                        peakColor = `hsla(${hue}, 100%, ${lightness}%,0.2)`;
                     }
                     ctx.fillStyle = peakColor;
                     ctx.fillRect(columnX, Math.round(y), 1, 1); // Draw peak dot
