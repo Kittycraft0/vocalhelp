@@ -618,7 +618,7 @@ function drawFormantGuide() {
                     let peakColor;
                     // Check if this peak is one of the identified strongest formants
                     if (strongestFreqMap.has(peak.freq)) {
-                        peakColor = FORMANT_CANDIDATE_COLOR; // Purple for F1/F2/F3 candidates
+                        peakColor = FORMANT_CANDIDATE_COLOR; // White for F1/F2/F3 candidates
                     } else {
                         // Otherwise, color based on intensity heatmap
                         const percent = peak.amp / 255;
