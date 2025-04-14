@@ -36,7 +36,7 @@ const MAX_DISPLAY_FREQ = 16000; // Lowered max display slightly
 const F0_ESTIMATION_RANGE = { min: 80, max: 400 }; // Hz range for F0 proxy
 const F0_PEAK_THRESHOLD = 100; // Min amplitude (0-255) for F0 peak proxy
 const FORMANT_PEAK_THRESHOLD = 100; // Threshold for detecting any peak for formant guide
-const FORMANT_CANDIDATE_COLOR = "purple"; // Color for strongest F1/F2/F3 candidates
+const FORMANT_CANDIDATE_COLOR = "white"; // Color for strongest F1/F2/F3 candidates
 
 
 // Buffers for data
