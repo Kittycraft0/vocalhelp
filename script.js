@@ -524,9 +524,9 @@ function drawWeightMeter() {
     // Y-axis: 0 = top (light), height = bottom (heavy)
     const y = Math.round(normalizedWeight * height);
 
-    let weightColor = "green"; // Medium
-    if (normalizedWeight < WEIGHT_COLOR_LOW_THRESHOLD) weightColor = "cyan"; // Light
-    else if (normalizedWeight > WEIGHT_COLOR_HIGH_THRESHOLD) weightColor = "red"; // Heavy
+    let weightColor = "red"; // Medium
+    if (normalizedWeight < WEIGHT_COLOR_LOW_THRESHOLD) weightColor = "cyan"; // heavy
+    else if (normalizedWeight > WEIGHT_COLOR_HIGH_THRESHOLD) weightColor = "green"; // Light
 
     ctx.fillStyle = weightColor;
     if (y >= 0 && y < height && columnX >= 0) {
