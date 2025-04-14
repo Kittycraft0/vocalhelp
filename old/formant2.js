@@ -70,7 +70,7 @@ async function initializeMeydaAnalyzer() {
                 source: data.source,  // Reuse existing source
                 bufferSize: bufferSize,
                 featureExtractors: ["mfcc"], // Use an available feature extractor
-                callback: processAudio
+                callback: processAudio // Process audio data
             });
 
             analyzer.start();
@@ -82,11 +82,14 @@ async function initializeMeydaAnalyzer() {
     }
 }
 
+// Process audio data and update the formant buffer
 function processAudio(features) {
     if (features && features.mfcc) {
         const mfccCoefficients = features.mfcc;
         const formants = getFormantsFromMFCC(mfccCoefficients);
-        updateFormantData(formants);
+
+        // Update the formant buffer
+        data.formantBuffer = formants; // Store the extracted formants in the buffer
     }
 }
 
@@ -162,16 +165,15 @@ function findPolynomialRoots(coefficients) {
 
 // Function to update formant data and redraw the visualization
 function updateFormantData(newData) {
+    if(!newData){
+        console.log("newData does not exist in this cycle!");
+        return;
+    }
     if (newData.length === 0) {
         console.warn("No formants detected.");
         return;
     }
     formantData=newData; // Update the formant data with the new data
-    //formantData.push(newData);
-    //if (formantData.length > MAX_HISTORY) {
-    //    formantData.shift();
-    //}
-    drawFormants();
 }
 
 // Function to map frequency to a color gradient
@@ -187,18 +189,18 @@ function frequencyToColor(freq) {
 
 var lastFinalPoint = [];
 
-// Optimized scrolling for formant visualization
+// Visualization function
 function drawFormants() {
     const ctx = formantCanvas.getContext("2d");
-    // Scroll the image left
-    const imageData = formantCtx.getImageData(1, 0, formantCanvas.width - 1, formantCanvas.height);
-    formantCtx.putImageData(imageData, 0, 0);
-    ctx.clearRect(formantCanvas.width - 1, 0, 2, formantCanvas.height); // Draw a vertical line on the right edge
+// Scroll the image left
+    //const imageData = formantCtx.getImageData(1, 0, formantCanvas.width - 1, formantCanvas.height);
+    //formantCtx.putImageData(imageData, 0, 0);
+    //ctx.clearRect(formantCanvas.width - 1, 0, 2, formantCanvas.height); // Draw a vertical line on the right edge
     
     // Clear the rightmost pixels
-    formantCtx.fillStyle = 'rgb(0, 0, 0)';
+    /*formantCtx.fillStyle = 'rgb(0, 0, 0)';
     formantCtx.fillRect(formantCanvas.width - 1, 0, 1, formantCanvas.height);
-
+    */
     // Draw horizontal lines for typical feminine ranges
     Object.keys(feminineRanges).forEach((formant, index) => {
         const [min, max] = feminineRanges[formant];
@@ -216,10 +218,10 @@ function drawFormants() {
     // Example of additional visualization logic    
     const finalPoint = formantData;//formantData[formantData.length - 1];
     if(!finalPoint){console.log("finalPoint does not exist in this cycle!");}
-    if (data.visualType === "linear") {
+    /*if (data.visualType === "linear") {
         // Draw formant data as rectangles on the right-hand side
         for (let i = 0; i < finalPoint.length; i++) {
-            const y = formantCanvas.height - (finalPoint[i] / maxFrequency) * formantCanvas.height;
+        const y = formantCanvas.height - (finalPoint[i] / maxFrequency) * formantCanvas.height;
             ctx.fillStyle = frequencyToColor(finalPoint[i]);
             ctx.fillRect(formantCanvas.width - 1, y, 1, 1); // Draw rectangles with width and height of 1 pixel
         }
@@ -234,14 +236,163 @@ function drawFormants() {
             //const nexty = formantCanvas.height - formantCanvas.height * data.frequencyToLogScale(nextFrequency);
             const color = data.amplitudeToColor(value);
             formantCtx.fillStyle = color;
-            formantCtx.fillRect(formantCanvas.width - 1, y, 1, 1);
+        formantCtx.fillRect(formantCanvas.width - 1, y, 1, 1);
             
             ctx.fillStyle = pointColors[pointColors.length-1-i]; //frequencyToColor(finalPoint[i]);
             ctx.fillRect(formantCanvas.width - 1, y, 1, 5); // Draw rectangles with width and height of 1 pixel
         }
-    }
+    }*/
     lastFinalPoint = finalPoint;
 }
 
+// credit to copilot AI that implemented from https://in-formant.app/
+// https://github.com/in-formant/in-formant?tab=Apache-2.0-1-ov-file they use the 
+// apache 2.0 license so it's ok to use this code
+// Function to extract formants using LPC and root-finding
+function extractFormants(audioBuffer, sampleRate, lpcOrder = 12) {
+    // Step 1: Pre-emphasis filter
+    const preEmphasized = audioBuffer.map((sample, i) => {
+        return i === 0 ? sample : sample - 0.97 * audioBuffer[i - 1];
+    });
+
+    // Step 2: Autocorrelation
+    const autocorrelation = Array(lpcOrder + 1).fill(0);
+    for (let lag = 0; lag <= lpcOrder; lag++) {
+        for (let i = lag; i < preEmphasized.length; i++) {
+            autocorrelation[lag] += preEmphasized[i] * preEmphasized[i - lag];
+        }
+    }
+
+    // Step 3: Levinson-Durbin recursion to calculate LPC coefficients
+    const lpcCoefficients = levinsonDurbin(autocorrelation, lpcOrder);
+
+    // Step 4: Find roots of the LPC polynomial
+    const roots = findPolynomialRoots(lpcCoefficients);
+
+    // Step 5: Extract formant frequencies from roots
+    const formantFrequencies = roots
+        .filter(root => root.im >= 0) // Only consider roots with positive imaginary parts
+        .map(root => (Math.atan2(root.im, root.re) * sampleRate) / (2 * Math.PI))
+        .filter(freq => freq >= 90 && freq <= 5000) // Filter frequencies within the human speech range
+        .sort((a, b) => a - b); // Sort frequencies in ascending order
+
+    return formantFrequencies;
+}
+
+// Visualization function
+function visualizeFormants(formantFrequencies) {
+    const ctx = formantCanvas.getContext("2d");
+
+    // Clear the canvas
+    //ctx.clearRect(0, 0, formantCanvas.width, formantCanvas.height);
+
+    // Scroll the image left
+    const imageData = spectrogramCtx.getImageData(1, 0, spectrogramCanvas.width - 1, spectrogramCanvas.height);
+    spectrogramCtx.putImageData(imageData, 0, 0);
+    
+    // Draw formants as rectangles or points
+    formantFrequencies.forEach((frequency, index) => {
+        const y = formantCanvas.height - (frequency / maxFrequency) * formantCanvas.height;
+        const color = frequencyToColor(frequency);
+
+        // Draw a rectangle for each formant
+        ctx.fillStyle = color;
+        ctx.fillRect(formantCanvas.width - 1 - index * 10, y, 10, 10);
+    });
+}
+
+// Process audio buffer and visualize formants
+function processAudioBuffer() {
+    const sampleRate = data.audioContext.sampleRate;
+    const audioBuffer = data.dataArray; // Use the existing audio buffer from the `data` object
+    const formantFrequencies = extractFormants(audioBuffer, sampleRate);
+
+    // Visualize the extracted formants
+    visualizeFormants(formantFrequencies);
+}
+
+// Real-time audio processing using the existing `data` object
+function startFormantProcessing() {
+    if (!data.audioContext || !data.source || !data.analyser) {
+        console.error("Audio context, source, or analyser is not initialized in the `data` object.");
+        return;
+    }
+
+    function update() {
+        data.analyser.getFloatTimeDomainData(data.dataArray); // Use the existing analyser and buffer
+        processAudioBuffer();
+        requestAnimationFrame(update);
+    }
+
+    update();
+}
 
 
+/*
+
+
+// Function to extract formants using LPC and root-finding
+function extractFormants(audioBuffer, sampleRate, lpcOrder = 12) {
+    // Step 1: Pre-emphasis filter
+    const preEmphasized = audioBuffer.map((sample, i) => {
+        return i === 0 ? sample : sample - 0.97 * audioBuffer[i - 1];
+    });
+
+    // Step 2: Autocorrelation
+    const autocorrelation = Array(lpcOrder + 1).fill(0);
+    for (let lag = 0; lag <= lpcOrder; lag++) {
+        for (let i = lag; i < preEmphasized.length; i++) {
+            autocorrelation[lag] += preEmphasized[i] * preEmphasized[i - lag];
+        }
+    }
+
+    // Step 3: Levinson-Durbin recursion to calculate LPC coefficients
+    const lpcCoefficients = levinsonDurbin(autocorrelation, lpcOrder);
+
+    // Step 4: Find roots of the LPC polynomial
+    const roots = findPolynomialRoots(lpcCoefficients);
+
+    // Step 5: Extract formant frequencies from roots
+    const formantFrequencies = roots
+        .filter(root => root.im >= 0) // Only consider roots with positive imaginary parts
+        .map(root => (Math.atan2(root.im, root.re) * sampleRate) / (2 * Math.PI))
+        .filter(freq => freq >= 90 && freq <= 5000) // Filter frequencies within the human speech range
+        .sort((a, b) => a - b); // Sort frequencies in ascending order
+
+    return formantFrequencies;
+}
+
+// Visualization function
+function visualizeFormants(formantFrequencies) {
+    const ctx = formantCanvas.getContext("2d");
+
+    // Clear the canvas
+    //ctx.clearRect(0, 0, formantCanvas.width, formantCanvas.height);
+
+    // Scroll the image left
+    const imageData = spectrogramCtx.getImageData(1, 0, spectrogramCanvas.width - 1, spectrogramCanvas.height);
+    spectrogramCtx.putImageData(imageData, 0, 0);
+    
+    // Draw formants as rectangles or points
+    formantFrequencies.forEach((frequency, index) => {
+        const y = formantCanvas.height - (frequency / maxFrequency) * formantCanvas.height;
+        const color = frequencyToColor(frequency);
+
+        // Draw a rectangle for each formant
+        ctx.fillStyle = color;
+        ctx.fillRect(formantCanvas.width - 1 - index * 10, y, 10, 10);
+    });
+}
+
+// Process audio buffer and visualize formants
+function processAudioBuffer() {
+    const sampleRate = data.audioContext.sampleRate;
+    const audioBuffer = data.dataArray; // Use the existing audio buffer from the `data` object
+    const formantFrequencies = extractFormants(audioBuffer, sampleRate);
+
+    // Visualize the extracted formants
+    visualizeFormants(formantFrequencies);
+}
+
+
+*/

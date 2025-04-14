@@ -1,0 +1,151 @@
+body {
+    font-family: sans-serif;
+    background-color: #f0f0f0;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 50px;
+}
+
+h1 {
+    color: #555;
+    text-align: center;
+}
+
+.controls {
+    margin-bottom: 20px;
+    background-color: #fff;
+    padding: 10px 15px; /* Reduced padding */
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    display: flex; /* Align items horizontally */
+    align-items: center;
+    gap: 15px; /* Space between control elements */
+}
+
+.controls label {
+    margin-bottom: 0; /* Remove bottom margin for inline label */
+    font-weight: normal;
+}
+
+#startButton {
+padding: 8px 12px; /* Slightly smaller button */
+font-size: 0.9em;
+cursor: pointer;
+border: none;
+background-color: #4caf50;
+color: white;
+border-radius: 5px;
+transition: background-color 0.3s ease;
+}
+
+#startButton:hover {
+background-color: #45a049;
+}
+
+#speakerTargetSelect {
+padding: 5px;
+font-size: 0.9em;
+border: 1px solid #ccc;
+border-radius: 4px;
+}
+
+#status {
+/* margin-top: 10px; */ /* Removed top margin */
+font-style: italic;
+color: #666;
+/* display: inline-block; */ /* Flex handles alignment */
+margin-left: auto; /* Push status to the right */
+}
+
+.main-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 10px;
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    width: fit-content;
+    margin: 0 auto;
+}
+
+/* Style for containers holding a canvas and its labels */
+.meter-container,
+.frequency-axis-container,
+.spectrogram-container,
+.spectrum-container,
+.formant-container,
+.weight-container,
+.formant-label-container {
+    border: 1px solid #ccc;
+    padding: 5px;
+    background-color: #f8f8f8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Containers within columns */
+.center-container,
+.right-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Style for the canvases themselves */
+canvas {
+    background-color: #000;
+    display: block;
+}
+
+/* Specific static canvas backgrounds */
+#frequencyAxisCanvas,
+#formantLabelCanvas,
+#weightCanvas { /* Apply to weight canvas for background labels */
+background-color: #f0f0f0;
+}
+/* Override weight canvas background if needed during drawing */
+#weightCanvas.drawing {
+background-color: #000;
+}
+
+
+label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+    text-align: center;
+    width: 100%;
+    font-size: 0.9em;
+}
+
+/* Style for small info text within labels */
+.axis-info {
+    font-size: 0.8em;
+    font-weight: normal;
+    color: #555;
+}
+
+.axis-labels {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+    padding: 3px 5px;
+    box-sizing: border-box;
+    font-size: 0.85em;
+    font-weight: bold;
+    color: #111;
+    background-color: #eee;
+    border-radius: 3px;
+    margin-top: 4px;
+}
+
+.x-axis-label {
+    text-align: right;
+}

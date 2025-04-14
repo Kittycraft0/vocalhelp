@@ -115,12 +115,15 @@ navigator.mediaDevices.getUserMedia({ audio: true })
             startThicknessAnalysis();
             // Initialize the Meyda Analyzer for formant.js after initializing the audio context and source
             initializeMeydaAnalyzer();
+            // Start formant processing
+            startFormantProcessing();
 
             setInterval(() => {
                 drawSpectrum();
                 updateVolumeMeter();
                 drawSpectrogram();
                 drawThicknessGraph();
+                //updateFormantData();
                 drawFormants();
             }, 1000 / 60);
         });
